@@ -1,0 +1,30 @@
+/* Mobile positioning and overflow fixes */
+html, body {
+  overflow-x: hidden !important;
+  width: 100%;
+  max-width: 100vw;
+  position: relative;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Prevent elements from causing horizontal overflow */
+.container {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 768px) {
+  /* Additional mobile fixes */
+  body {
+    overflow-x: hidden !important;
+  }
+  
+  * {
+    max-width: 100%;
+  }
+}

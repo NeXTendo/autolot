@@ -1,0 +1,54 @@
+/* CRITICAL DROPDOWN FIX - Solid backgrounds */
+[data-radix-select-content],
+[data-radix-dropdown-menu-content],
+[data-radix-popover-content] {
+  background-color: hsl(var(--background)) !important;
+  opacity: 1 !important;
+  border: 1px solid hsl(var(--border)) !important;
+}
+
+/* Select viewport solid background */
+[data-radix-select-viewport] {
+  background-color: hsl(var(--background)) !important;
+}
+
+/* Item hover states */
+[data-radix-select-item]:hover,
+[data-radix-dropdown-menu-item]:hover {
+  background-color: hsl(var(--accent)) !important;
+}
+
+/* Mobile Nav Overlay - FORCE SOLID */
+.mobile-nav-overlay {
+  background-color: hsl(var(--background)) !important;
+  opacity: 1 !important;
+}
+
+/* Dialog/Modal opacity fixes */
+[data-radix-dialog-overlay] {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+  opacity: 1 !important;
+  z-index: 100000 !important;
+}
+
+[data-radix-dialog-content],
+.radix-dialog-content {
+  background-color: hsl(var(--background)) !important;
+  opacity: 1 !important;
+  z-index: 100001 !important;
+}
+
+/* Mobile - EXTRA OPAQUE */
+@media (max-width: 768px) {
+  [data-radix-select-content],
+  [data-radix-dropdown-menu-content] {
+    background-color: hsl(var(--background)) !important;
+    opacity: 1 !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
+  }
+  
+  [data-radix-dialog-content] {
+    background-color: hsl(var(--background)) !important;
+    opacity: 1 !important;
+  }
+}

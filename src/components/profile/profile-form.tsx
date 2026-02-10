@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { createClient } from "@/lib/supabase/client"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
@@ -39,7 +38,6 @@ interface ProfileFormProps {
 }
 
 export function ProfileForm({ initialProfile }: ProfileFormProps) {
-  const router = useRouter()
   const { toast } = useToast()
   const supabase = createClient()
   
@@ -78,11 +76,12 @@ export function ProfileForm({ initialProfile }: ProfileFormProps) {
         title: "Profile Updated",
         description: "Your changes have been saved successfully.",
       })
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Could not update profile."
       toast({
         variant: "destructive",
         title: "Update Failed",
-        description: err.message || "Could not update profile.",
+        description: errorMessage,
       })
     } finally {
       setLoading(false)

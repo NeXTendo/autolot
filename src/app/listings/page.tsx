@@ -1,32 +1,38 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Search, SlidersHorizontal } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { searchVehicles } from "@/lib/supabase/rpc"
+import { searchVehicles, type Vehicle } from "@/lib/supabase/rpc"
 import { VehicleCard } from "@/components/vehicle-card"
 import { createClient } from "@/lib/supabase/client"
 
 export default function ListingsPage() {
   const [searchTerm, setSearchTerm] = useState("")
-  const [vehicles, setVehicles] = useState<any[]>([])
+  const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
-
-  const loadVehicles = useCallback(async () => {
-    setLoading(true)
-    const result = await searchVehicles(supabase, {
-      page_limit: 50,
-      page_offset: 0,
-    })
-    setVehicles(result.vehicles || [])
-    setLoading(false)
-  }, [supabase])
+  const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
-    loadVehicles()
-  }, [loadVehicles])
+    let ignore = false
+
+    async function fetchVehicles() {
+      const result = await searchVehicles(supabase, {
+        page_limit: 50,
+        page_offset: 0,
+      })
+      if (!ignore) {
+        setVehicles(result.vehicles || [])
+        setLoading(false)
+      }
+    }
+
+    fetchVehicles()
+    return () => {
+      ignore = true
+    }
+  }, [supabase])
 
   const handleSearch = async () => {
     setLoading(true)

@@ -3,7 +3,7 @@ export default function ResetPasswordPage() {
     <div className="container py-24 min-h-screen flex items-center justify-center">
       <div className="glass-panel p-8 md:p-12 w-full max-w-md animate-fade-up">
         <h1 className="text-3xl font-bold mb-2">Reset Password</h1>
-        <p className="text-platinum-dim mb-8">Enter your email and we'll send a secure link.</p>
+        <p className="text-platinum-dim mb-8">Enter your email and we&apos;ll send a secure link.</p>
 
         <form className="space-y-6">
           <div>

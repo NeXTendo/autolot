@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { VehicleCard } from "@/components/vehicle-card"
 import { getHistory, ViewHistoryItem } from "@/lib/utils/view-history"
 import { SectionCarousel } from "@/components/section-carousel"
@@ -11,21 +11,18 @@ interface RecentlyViewedProps {
 }
 
 export function RecentlyViewed({ excludeId, title = "Recently Viewed" }: RecentlyViewedProps) {
-  const [history, setHistory] = useState<ViewHistoryItem[]>([])
+  const [history] = useState<ViewHistoryItem[]>(() => getHistory())
 
-  useEffect(() => {
-    const items = getHistory()
-    setHistory(items.filter(item => item.id !== excludeId))
-  }, [excludeId])
+  const filteredHistory = history.filter(item => item.id !== excludeId)
 
-  if (history.length === 0) return null
+  if (filteredHistory.length === 0) return null
 
   return (
     <SectionCarousel 
       title={title} 
       description="Based on your browsing activity"
     >
-      {history.slice(0, 10).map((item) => (
+      {filteredHistory.slice(0, 10).map((item) => (
         <VehicleCard 
           key={item.id} 
           vehicle={{

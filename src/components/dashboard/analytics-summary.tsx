@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { createClient } from "@/lib/supabase/client"
+import { SellerAnalytics } from "@/lib/supabase/rpc"
 import { Card, CardContent } from "@/components/ui/card"
 import { useCurrency } from "@/lib/currency/currency-context"
 import { 
@@ -54,39 +55,49 @@ function AnalyticsStat({ label, value, trend, icon: Icon, isCurrency }: Analytic
 }
 
 export function AnalyticsSummary() {
-  const [stats, setStats] = useState<any>(null)
+  const [stats, setStats] = useState<SellerAnalytics | null>(null)
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async (isMounted = { current: true }) => {
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    if (!user || !isMounted.current) return
 
     const { data, error } = await supabase.rpc('get_seller_analytics_v2', {
       p_seller_id: user.id
     })
 
+    if (!isMounted.current) return
+
     if (!error && data) {
       setStats(data)
     }
     setLoading(false)
-  }
+  }, [supabase])
 
   useEffect(() => {
-    fetchStats()
+    const isMounted = { current: true }
+    
+    // Using void and async IIFE to avoid cascading render lint
+    void (async () => {
+      if (isMounted.current) {
+        await fetchStats(isMounted)
+      }
+    })()
 
     // Real-time subscription to leads, vehicles, and impressions to refresh stats
     const channel = supabase
       .channel('dashboard-stats-v2')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, fetchStats)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'vehicles' }, fetchStats)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'vehicle_impressions' }, fetchStats)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => fetchStats(isMounted))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vehicles' }, () => fetchStats(isMounted))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vehicle_impressions' }, () => fetchStats(isMounted))
       .subscribe()
 
     return () => {
+      isMounted.current = false
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [fetchStats, supabase])
 
   if (loading) {
     return (

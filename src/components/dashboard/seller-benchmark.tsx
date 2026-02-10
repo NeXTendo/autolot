@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { createClient } from "@/lib/supabase/client"
+import { SellerAnalytics } from "@/lib/supabase/rpc"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { 
   Users, 
@@ -56,27 +57,40 @@ function BenchmarkItem({ label, userValue, marketValue, percentage, icon: Icon, 
 }
 
 export function SellerBenchmark() {
-  const [stats, setStats] = useState<any>(null)
+  const [stats, setStats] = useState<SellerAnalytics | null>(null)
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async (isMounted = { current: true }) => {
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    if (!user || !isMounted.current) return
 
     const { data, error } = await supabase.rpc('get_seller_analytics_v2', {
       p_seller_id: user.id
     })
 
+    if (!isMounted.current) return
+
     if (!error && data) {
       setStats(data)
     }
     setLoading(false)
-  }
+  }, [supabase])
 
   useEffect(() => {
-    fetchStats()
-  }, [])
+    const isMounted = { current: true }
+    
+    // Using void and async IIFE to avoid cascading render lint
+    void (async () => {
+      if (isMounted.current) {
+        await fetchStats(isMounted)
+      }
+    })()
+
+    return () => {
+      isMounted.current = false
+    }
+  }, [fetchStats])
 
   if (loading) {
     return (
@@ -93,7 +107,7 @@ export function SellerBenchmark() {
 
   const responseDiff = calcDiff(stats?.user_metrics?.response_time || 0, stats?.market_benchmarks?.avg_response_time || 1)
   const velocityDiff = calcDiff(stats?.user_metrics?.sales_velocity || 0, stats?.market_benchmarks?.avg_sales_velocity || 1)
-  const conversionDiff = calcDiff(parseFloat(stats?.conversion_rate) || 0, 4.2)
+  const conversionDiff = calcDiff(stats?.conversion_rate || 0, 4.2)
 
   return (
     <Card className="border-primary/20 bg-card/60 backdrop-blur-3xl shadow-3xl">
@@ -105,16 +119,16 @@ export function SellerBenchmark() {
       <CardContent className="space-y-10 pt-8">
         <BenchmarkItem 
           label="Sales Velocity" 
-          userValue={`${stats?.user_metrics?.sales_velocity}d`} 
-          marketValue={`${stats?.market_benchmarks?.avg_sales_velocity}d`} 
+          userValue={`${stats?.user_metrics?.sales_velocity || 0}d`} 
+          marketValue={`${stats?.market_benchmarks?.avg_sales_velocity || 0}d`} 
           percentage={-velocityDiff} 
           icon={Zap}
           inverted={true}
         />
         <BenchmarkItem 
           label="Response Time" 
-          userValue={`${stats?.user_metrics?.response_time}m`} 
-          marketValue={`${stats?.market_benchmarks?.avg_response_time}m`} 
+          userValue={`${stats?.user_metrics?.response_time || 0}m`} 
+          marketValue={`${stats?.market_benchmarks?.avg_response_time || 0}m`} 
           percentage={-responseDiff} 
           icon={Timer}
           inverted={true}

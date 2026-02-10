@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { deleteVehicle, updateVehicle } from '@/lib/supabase/rpc'
+import { deleteVehicle, updateVehicle, type VehicleInput } from '@/lib/supabase/rpc'
 
 const POPULAR_MAKES = [
   'Toyota', 'Honda', 'Ford', 'Chevrolet', 'Nissan', 'BMW', 'Mercedes-Benz',
@@ -41,36 +41,59 @@ export default function EditListingPage() {
   const { id } = useParams()
   const router = useRouter()
   const { toast } = useToast()
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [existingImages, setExistingImages] = useState<string[]>([])
   const [newImages, setNewImages] = useState<File[]>([])
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    make: string
+    model: string
+    year: number
+    trim: string
+    body_type: string
+    mileage: string
+    condition: VehicleInput['condition']
+    fuel_type: string
+    transmission: string
+    drivetrain: string
+    exterior_color: string
+    interior_color: string
+    vin: string
+    title_status: VehicleInput['title_status']
+    accidents: VehicleInput['accidents']
+    description: string
+    features: string[]
+    price: string
+    pricing_strategy: string
+    contact_method: string
+    show_phone: boolean
+    status: VehicleInput['status']
+  }>({
     make: '',
     model: '',
     year: new Date().getFullYear(),
     trim: '',
     body_type: '',
     mileage: '',
-    condition: 'Good' as any,
+    condition: 'Good',
     fuel_type: '',
     transmission: '',
     drivetrain: '',
     exterior_color: '',
     interior_color: '',
     vin: '',
-    title_status: 'Clean' as any,
-    accidents: 'None' as any,
+    title_status: 'Clean',
+    accidents: 'None',
     description: '',
     features: [] as string[],
     price: '',
     pricing_strategy: 'Negotiable',
     contact_method: 'In-built Messenger',
     show_phone: false,
-    status: 'active' as any,
+    status: 'active',
   })
 
   const loadVehicle = useCallback(async () => {
@@ -143,7 +166,7 @@ export default function EditListingPage() {
     loadVehicle()
   }, [loadVehicle])
 
-  const updateField = (field: string, value: any) => {
+  const updateField = <K extends keyof typeof formData>(field: K, value: typeof formData[K]) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
@@ -220,11 +243,12 @@ export default function EditListingPage() {
         description: "Your changes have been saved successfully.",
       })
       router.push(`/vehicle/${id}`)
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as Error;
       toast({
         variant: "destructive",
         title: "Update Failed",
-        description: err.message || "An unexpected error occurred.",
+        description: error.message || "An unexpected error occurred.",
       })
     } finally {
       setSaving(false)
@@ -241,11 +265,12 @@ export default function EditListingPage() {
         description: "Congratulations on your sale!",
       })
       router.push(`/vehicle/${id}`)
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as Error;
       toast({
         variant: "destructive",
         title: "Operation Failed",
-        description: err.message,
+        description: error.message,
       })
     } finally {
       setSaving(false)
@@ -264,11 +289,12 @@ export default function EditListingPage() {
         description: "Your vehicle has been removed.",
       })
       router.push('/dashboard')
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as Error;
       toast({
         variant: "destructive",
         title: "Delete Failed",
-        description: err.message,
+        description: error.message,
       })
     } finally {
       setSaving(false)
@@ -291,8 +317,9 @@ export default function EditListingPage() {
             <h3 className="text-xl font-bold">Basic Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Year *</label>
+                <label htmlFor="year" className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Year *</label>
                 <Input
+                  id="year"
                   type="number"
                   value={formData.year}
                   onChange={(e) => updateField('year', parseInt(e.target.value))}
@@ -301,9 +328,9 @@ export default function EditListingPage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Make *</label>
+                <label htmlFor="make-trigger" id="make-label" className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Make *</label>
                 <Select value={formData.make} onValueChange={(v) => updateField('make', v)}>
-                  <SelectTrigger>
+                  <SelectTrigger id="make-trigger" aria-labelledby="make-label">
                     <SelectValue placeholder="Select make" />
                   </SelectTrigger>
                   <SelectContent>
@@ -314,25 +341,27 @@ export default function EditListingPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Model *</label>
+                <label htmlFor="model" className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Model *</label>
                 <Input
+                  id="model"
                   value={formData.model}
                   onChange={(e) => updateField('model', e.target.value)}
                   placeholder="e.g., Camry"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Trim</label>
+                <label htmlFor="trim" className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Trim</label>
                 <Input
+                  id="trim"
                   value={formData.trim}
                   onChange={(e) => updateField('trim', e.target.value)}
                   placeholder="e.g., XLE, Sport"
                 />
               </div>
               <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Body Type</label>
+                <label htmlFor="body_type-trigger" id="body_type-label" className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Body Type</label>
                 <Select value={formData.body_type} onValueChange={(v) => updateField('body_type', v)}>
-                  <SelectTrigger>
+                  <SelectTrigger id="body_type-trigger" aria-labelledby="body_type-label">
                     <SelectValue placeholder="Select body type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -351,17 +380,18 @@ export default function EditListingPage() {
             <h3 className="text-xl font-bold">Specifications</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Mileage (km) *</label>
+                <label htmlFor="mileage" className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Mileage (km) *</label>
                 <Input
+                  id="mileage"
                   type="number"
                   value={formData.mileage}
                   onChange={(e) => updateField('mileage', e.target.value)}
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Condition *</label>
-                <Select value={formData.condition} onValueChange={(v) => updateField('condition', v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <label htmlFor="condition-trigger" id="condition-label" className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Condition *</label>
+                <Select value={formData.condition} onValueChange={(v) => updateField('condition', v as VehicleInput['condition'])}>
+                  <SelectTrigger id="condition-trigger" aria-labelledby="condition-label"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {CONDITIONS.map(cond => (
                       <SelectItem key={cond} value={cond}>{cond}</SelectItem>
@@ -370,9 +400,9 @@ export default function EditListingPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Fuel Type</label>
+                <label htmlFor="fuel_type-trigger" id="fuel_type-label" className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Fuel Type</label>
                 <Select value={formData.fuel_type} onValueChange={(v) => updateField('fuel_type', v)}>
-                  <SelectTrigger><SelectValue placeholder="Select fuel" /></SelectTrigger>
+                  <SelectTrigger id="fuel_type-trigger" aria-labelledby="fuel_type-label"><SelectValue placeholder="Select fuel" /></SelectTrigger>
                   <SelectContent>
                     {FUEL_TYPES.map(fuel => (
                       <SelectItem key={fuel} value={fuel}>{fuel}</SelectItem>
@@ -381,9 +411,9 @@ export default function EditListingPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Transmission</label>
+                <label htmlFor="transmission-trigger" id="transmission-label" className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Transmission</label>
                 <Select value={formData.transmission} onValueChange={(v) => updateField('transmission', v)}>
-                  <SelectTrigger><SelectValue placeholder="Select transmission" /></SelectTrigger>
+                  <SelectTrigger id="transmission-trigger" aria-labelledby="transmission-label"><SelectValue placeholder="Select transmission" /></SelectTrigger>
                   <SelectContent>
                     {TRANSMISSIONS.map(trans => (
                       <SelectItem key={trans} value={trans}>{trans}</SelectItem>
@@ -409,6 +439,7 @@ export default function EditListingPage() {
                       <button 
                         onClick={() => removeExistingImage(url)}
                         className="absolute top-1 right-1 bg-destructive p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        aria-label="Remove image"
                       >
                         <X className="w-3 h-3 text-white" />
                       </button>
@@ -421,6 +452,7 @@ export default function EditListingPage() {
                       <button 
                         onClick={() => removeNewImage(i)}
                         className="absolute top-1 right-1 bg-destructive p-1 rounded-full"
+                        aria-label="Remove image"
                       >
                         <X className="w-3 h-3 text-white" />
                       </button>
@@ -438,11 +470,14 @@ export default function EditListingPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Narrative Description</label>
+                <label htmlFor="description" className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Narrative Description</label>
                 <textarea
+                  id="description"
                   value={formData.description}
                   onChange={(e) => updateField('description', e.target.value)}
                   className="w-full min-h-[150px] rounded-xl border border-input bg-card px-4 py-3 text-sm focus:ring-2 focus:ring-platinum/20"
+                  placeholder="Describe your vehicle's condition, history, and key features..."
+                  title="Narrative Description"
                 />
               </div>
             </div>
@@ -454,8 +489,9 @@ export default function EditListingPage() {
             <h3 className="text-xl font-bold">Pricing & Status</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-2">
-                <label className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Price ($) *</label>
+                <label htmlFor="price" className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Price ($) *</label>
                 <Input
+                  id="price"
                   type="number"
                   value={formData.price}
                   onChange={(e) => updateField('price', e.target.value)}

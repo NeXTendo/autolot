@@ -91,7 +91,7 @@ export default function LoginPage() {
         router.push('/dashboard')
         router.refresh()
       }
-    } catch (err: any) {
+    } catch {
       toast({
         variant: "destructive",
         title: "Network Error",
@@ -156,7 +156,7 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-6 text-center text-sm text-muted-foreground">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link href="/register" className="text-[hsl(var(--platinum))] hover:underline font-medium">
               Register
             </Link>

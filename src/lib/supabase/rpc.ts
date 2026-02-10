@@ -57,6 +57,22 @@ export interface SearchResult {
   total: number
 }
 
+export interface SellerAnalytics {
+  total_views: number
+  new_leads: number
+  inventory_value: number
+  conversion_rate: number
+  monthly_reach: number
+  user_metrics: {
+    response_time: number
+    sales_velocity: number
+  }
+  market_benchmarks: {
+    avg_response_time: number
+    avg_sales_velocity: number
+  }
+}
+
 // ============================================================================
 // VEHICLE RPC FUNCTIONS
 // ============================================================================

@@ -25,9 +25,13 @@ const BODY_TYPES = ['Sedan', 'SUV', 'Truck', 'Coupe', 'Convertible', 'Wagon', 'V
 const FUEL_TYPES = ['Gasoline', 'Diesel', 'Electric', 'Hybrid', 'Plug-in Hybrid']
 const TRANSMISSIONS = ['Automatic', 'Manual', 'CVT', 'Semi-Automatic']
 const DRIVETRAINS = ['FWD', 'RWD', 'AWD', '4WD']
-const CONDITIONS = ['Excellent', 'Very Good', 'Good', 'Fair', 'Poor']
-const TITLE_STATUSES = ['Clean', 'Salvage', 'Rebuilt']
-const ACCIDENT_HISTORIES = ['None', 'Minor', 'Moderate', 'Major']
+const CONDITIONS = ['Excellent', 'Very Good', 'Good', 'Fair', 'Poor'] as const
+const TITLE_STATUSES = ['Clean', 'Salvage', 'Rebuilt'] as const
+const ACCIDENT_HISTORIES = ['None', 'Minor', 'Moderate', 'Major'] as const
+
+type Condition = typeof CONDITIONS[number]
+type TitleStatus = typeof TITLE_STATUSES[number]
+type AccidentHistory = typeof ACCIDENT_HISTORIES[number]
 
 const COMMON_FEATURES = [
   'Leather Seats', 'Sunroof', 'Navigation System', 'Backup Camera',
@@ -36,11 +40,35 @@ const COMMON_FEATURES = [
   'Blind Spot Monitoring', 'Apple CarPlay', 'Android Auto'
 ]
 
+interface FormData {
+  make: string
+  model: string
+  year: number
+  trim: string
+  body_type: string
+  mileage: string
+  condition: Condition
+  fuel_type: string
+  transmission: string
+  drivetrain: string
+  exterior_color: string
+  interior_color: string
+  vin: string
+  title_status: TitleStatus
+  accidents: AccidentHistory
+  description: string
+  features: string[]
+  price: string
+  pricing_strategy: string
+  contact_method: string
+  show_phone: boolean
+}
+
 export default function ListingWizard() {
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [images, setImages] = useState<File[]>([])
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     // Basic Info
     make: '',
     model: '',
@@ -49,7 +77,7 @@ export default function ListingWizard() {
     body_type: '',
     // Specifications
     mileage: '',
-    condition: 'Good' as const,
+    condition: 'Good',
     fuel_type: '',
     transmission: '',
     drivetrain: '',
@@ -57,11 +85,11 @@ export default function ListingWizard() {
     interior_color: '',
     // History & Documentation
     vin: '',
-    title_status: 'Clean' as const,
-    accidents: 'None' as const,
+    title_status: 'Clean',
+    accidents: 'None',
     // Description & Features
     description: '',
-    features: [] as string[],
+    features: [],
     // Pricing
     price: '',
     pricing_strategy: 'Negotiable',
@@ -73,7 +101,7 @@ export default function ListingWizard() {
   const { toast } = useToast()
   const supabase = createClient()
 
-  const updateField = (field: string, value: any) => {
+  const updateField = <K extends keyof FormData>(field: K, value: FormData[K]) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
@@ -195,11 +223,11 @@ export default function ListingWizard() {
         description: "Your vehicle has been listed successfully.",
       })
       router.push('/dashboard')
-    } catch (err: any) {
+    } catch (err) {
       toast({
         variant: "destructive",
         title: "Failed to Create Listing",
-        description: err.message || "An unexpected error occurred.",
+        description: err instanceof Error ? err.message : "An unexpected error occurred.",
       })
     } finally {
       setLoading(false)
@@ -285,7 +313,7 @@ export default function ListingWizard() {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Condition *</label>
-                <Select value={formData.condition} onValueChange={(v) => updateField('condition', v)}>
+                <Select value={formData.condition} onValueChange={(v) => updateField('condition', v as Condition)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -371,7 +399,7 @@ export default function ListingWizard() {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Title Status</label>
-                <Select value={formData.title_status} onValueChange={(v) => updateField('title_status', v)}>
+                <Select value={formData.title_status} onValueChange={(v) => updateField('title_status', v as TitleStatus)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -384,7 +412,7 @@ export default function ListingWizard() {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Accident History</label>
-                <Select value={formData.accidents} onValueChange={(v) => updateField('accidents', v)}>
+                <Select value={formData.accidents} onValueChange={(v) => updateField('accidents', v as AccidentHistory)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -463,6 +491,8 @@ export default function ListingWizard() {
                       <button
                         onClick={() => removeImage(i)}
                         className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90"
+                        aria-label="Remove image"
+                        title="Remove image"
                       >
                         <X className="w-4 h-4" />
                       </button>

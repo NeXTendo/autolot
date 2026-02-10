@@ -116,7 +116,7 @@ export default function RegisterPage() {
           router.refresh()
         }, 1500)
       }
-    } catch (err: any) {
+    } catch {
       toast({
         variant: "destructive",
         title: "Network Error",

@@ -27,6 +27,8 @@ export interface VehicleInput {
   contact_method?: string
   pricing_strategy?: string
   show_phone?: boolean
+  status?: 'active' | 'pending' | 'sold' | 'archived'
+  is_featured?: boolean
 }
 
 export interface Vehicle extends VehicleInput {

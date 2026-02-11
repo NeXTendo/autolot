@@ -167,7 +167,6 @@
 /* Force Portals to the very top */
 [data-radix-portal] {
   z-index: 200000 !important;
-  position: relative;
 }
 
 .hide-scrollbar {

@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { InspectorOnboarding } from '@/components/inspector/inspector-onboarding'
 
 // Use specific interface for inspector dashboard to avoid full Vehicle type dependency and any types
 interface InspectorVehicle {
@@ -30,6 +31,7 @@ export default function InspectorDashboardPage() {
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [inspectorId, setInspectorId] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -53,6 +55,8 @@ export default function InspectorDashboardPage() {
       router.push('/login')
       return
     }
+
+    setInspectorId(user.id)
 
     // Check if user is inspector
     const { data: profile } = await supabase
@@ -153,6 +157,7 @@ export default function InspectorDashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] py-12">
+      {inspectorId && <InspectorOnboarding inspectorId={inspectorId} />}
       <div className="container max-w-4xl">
         <div className="mb-12">
           <h1 className="text-4xl font-black uppercase tracking-tighter text-white mb-2">

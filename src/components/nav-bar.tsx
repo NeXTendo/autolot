@@ -2,6 +2,8 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { CurrencySelector } from "@/components/currency-selector"
 import { SettingsModal } from "@/components/settings-modal"
@@ -11,7 +13,6 @@ import {
   Menu, 
   Home, 
   Car, 
-  LayoutDashboard, 
   User as UserIcon, 
   LogOut,
   Plus,
@@ -76,7 +77,13 @@ export function MobileNav({ user, userRole, signOut }: MobileNavProps) {
                     <MobileNavLink 
                       href="/dealer/dashboard" 
                       icon={Building2} 
-                      label="Dealer Dashboard" 
+                      label="Dashboard" 
+                      onClick={() => setOpen(false)} 
+                    />
+                    <MobileNavLink 
+                      href="/dealer/settings" 
+                      icon={Plus} 
+                      label="Business Profile" 
                       onClick={() => setOpen(false)} 
                     />
                     <MobileNavLink 
@@ -134,12 +141,14 @@ export function MobileNav({ user, userRole, signOut }: MobileNavProps) {
                   label="List Vehicle" 
                   onClick={() => setOpen(false)} 
                 />
-                <MobileNavLink 
-                  href="/profile" 
-                  icon={UserIcon} 
-                  label="My Profile" 
-                  onClick={() => setOpen(false)} 
-                />
+                {userRole !== 'dealer' && (
+                  <MobileNavLink 
+                    href="/profile" 
+                    icon={UserIcon} 
+                    label="My Profile" 
+                    onClick={() => setOpen(false)} 
+                  />
+                )}
               </>
             )}
 
@@ -185,16 +194,31 @@ export function MobileNav({ user, userRole, signOut }: MobileNavProps) {
 }
 
 function MobileNavLink({ href, icon: Icon, label, onClick }: { href: string; icon: React.ElementType; label: string; onClick: () => void }) {
+  const pathname = usePathname()
+  const isActive = pathname === href
+
   return (
     <Link
       href={href}
-      className="flex items-center gap-4 p-4 rounded-xl hover:bg-white/5 transition-all group"
+      className={cn(
+        "flex items-center gap-4 p-4 rounded-xl transition-all group",
+        isActive ? "bg-white text-[#0a0a0a]" : "hover:bg-white/5 text-white/60"
+      )}
       onClick={onClick}
     >
-      <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-colors">
-        <Icon size={18} className="text-white/40 group-hover:text-white transition-colors" />
+      <div className={cn(
+        "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
+        isActive ? "bg-[#0a0a0a]/10 text-[#0a0a0a]" : "bg-white/5 group-hover:bg-white/10"
+      )}>
+        <Icon size={18} className={cn(
+          "transition-colors",
+          isActive ? "text-[#0a0a0a]" : "text-white/40 group-hover:text-white"
+        )} />
       </div>
-      <span className="text-sm font-black uppercase tracking-widest text-white/60 group-hover:text-white transition-colors">
+      <span className={cn(
+        "text-sm font-black uppercase tracking-widest transition-colors",
+        isActive ? "text-[#0a0a0a]" : "group-hover:text-white"
+      )}>
         {label}
       </span>
     </Link>
@@ -208,32 +232,46 @@ interface NavBarProps {
 }
 
 export function NavBar({ user, userRole, signOut }: NavBarProps) {
+  const pathname = usePathname()
+
+  const navLinkClass = (href: string) => cn(
+    "text-xs uppercase tracking-widest font-black px-4 py-2 rounded-full transition-all",
+    pathname === href 
+      ? "bg-white text-[#0a0a0a] shadow-[0_0_20px_rgba(255,255,255,0.3)]" 
+      : "text-white/40 hover:text-white hover:bg-white/5"
+  )
+
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
-        <Link href="/" className="flex items-center space-x-2">
-          <span className="text-2xl font-bold tracking-tighter">
-            AUTO<span className="font-light text-muted-foreground">LOT</span>
+    <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-xl">
+      <div className="container flex h-20 items-center justify-between">
+        <Link href="/" className="flex items-center space-x-2 group">
+          <span className="text-2xl font-black tracking-tighter group-hover:scale-105 transition-transform">
+            AUTO<span className="font-light text-white/40">LOT</span>
           </span>
         </Link>
 
-        <div className="hidden lg:flex items-center gap-4">
-          <Link href="/" className="text-sm font-medium hover:text-[hsl(var(--platinum))] transition-colors">
+        <div className="hidden lg:flex items-center gap-2">
+          <Link href="/" className={navLinkClass("/")}>
             Home
           </Link>
-          <Link href="/listings" className="text-sm font-medium hover:text-[hsl(var(--platinum))] transition-colors">
+          <Link href="/listings" className={navLinkClass("/listings")}>
             Inventory
           </Link>
           
           {user ? (
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-px h-4 bg-white/10 mx-2" />
+              
               {/* Dealer Links */}
               {userRole === 'dealer' && (
                 <>
-                  <Link href="/dealer/dashboard" className="text-sm font-medium hover:text-[hsl(var(--platinum))] transition-colors">
-                    Dealer Dashboard
+                  <Link href="/dealer/dashboard" className={navLinkClass("/dealer/dashboard")}>
+                    Dashboard
                   </Link>
-                  <Link href="/dealer/staff" className="text-sm font-medium hover:text-[hsl(var(--platinum))] transition-colors">
+                  <Link href="/dealer/settings" className={navLinkClass("/dealer/settings")}>
+                    Business
+                  </Link>
+                  <Link href="/dealer/staff" className={navLinkClass("/dealer/staff")}>
                     Team
                   </Link>
                 </>
@@ -242,30 +280,34 @@ export function NavBar({ user, userRole, signOut }: NavBarProps) {
               {/* Buyer Links */}
               {(userRole === 'buyer' || userRole === 'registered' || userRole === 'verified') && (
                 <>
-                  <Link href="/buyer/dashboard" className="text-sm font-medium hover:text-[hsl(var(--platinum))] transition-colors">
-                    My Garage
+                  <Link href="/buyer/dashboard" className={navLinkClass("/buyer/dashboard")}>
+                    Garage
                   </Link>
                 </>
               )}
 
               {/* Admin Links */}
               {(userRole === 'admin' || userRole === 'moderator') && (
-                <Link href="/admin/dealers" className="text-sm font-medium hover:text-[hsl(var(--platinum))] transition-colors">
+                <Link href="/admin/dealers" className={navLinkClass("/admin/dealers")}>
                   Admin
                 </Link>
               )}
 
               {/* Inspector Links */}
               {userRole === 'inspector' && (
-                <Link href="/inspector/dashboard" className="text-sm font-medium hover:text-[hsl(var(--platinum))] transition-colors">
-                  Inspector
+                <Link href="/inspector/dashboard" className={navLinkClass("/inspector/dashboard")}>
+                  Verify
                 </Link>
               )}
 
 
-              <Link href="/profile" className="text-sm font-medium hover:text-[hsl(var(--platinum))] transition-colors">
-                Profile
-              </Link>
+              {userRole !== 'dealer' && (
+                <Link href="/profile" className={navLinkClass("/profile")}>
+                  Me
+                </Link>
+              )}
+              
+              <div className="w-px h-4 bg-white/10 mx-2" />
               
               {/* Currency Selector */}
               <CurrencySelector />

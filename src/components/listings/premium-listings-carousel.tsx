@@ -7,7 +7,6 @@ import {
   Sparkles, 
   ChevronLeft, 
   ChevronRight, 
-  Calendar, 
   Gauge, 
   Fuel, 
   Box,
@@ -27,7 +26,8 @@ export function PremiumListingsCarousel({ vehicles }: PremiumListingsCarouselPro
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isAnimating, setIsAnimating] = useState(false)
   
-  const ROTATION_INTERVAL = 10 * 60 * 1000 // 10 minutes
+  const ROTATION_INTERVAL = 10 * 1000 // 10 seconds
+  const rotationInterval = ROTATION_INTERVAL
 
   const nextVehicle = useCallback(() => {
     if (isAnimating) return
@@ -52,10 +52,10 @@ export function PremiumListingsCarousel({ vehicles }: PremiumListingsCarouselPro
 
     const timer = setInterval(() => {
       nextVehicle()
-    }, ROTATION_INTERVAL)
+    }, rotationInterval)
 
     return () => clearInterval(timer)
-  }, [vehicles.length, nextVehicle])
+  }, [vehicles.length, nextVehicle, rotationInterval])
 
   if (vehicles.length === 0) return null
 
@@ -124,7 +124,7 @@ export function PremiumListingsCarousel({ vehicles }: PremiumListingsCarouselPro
                 className="object-cover transition-transform duration-1000 group-hover:scale-105"
                 priority
               />
-              <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-black/80 via-transparent to-transparent md:via-transparent md:to-black/20" />
+              <div className="absolute inset-0 bg-linear-to-t md:bg-linear-to-r from-black/80 via-transparent to-transparent md:via-transparent md:to-black/20" />
               
               {/* Premium Badge Overlay */}
               <div className="absolute top-4 left-4 sm:top-8 sm:left-8 flex items-center gap-2 sm:gap-3 bg-black/60 backdrop-blur-xl border border-white/10 px-3 py-1.5 sm:px-4 sm:py-2">
@@ -167,8 +167,8 @@ export function PremiumListingsCarousel({ vehicles }: PremiumListingsCarouselPro
               </div>
 
               {activeVehicle.description && (
-                <p className="text-[10px] sm:text-xs text-platinum/40 leading-relaxed line-clamp-2 sm:line-clamp-3 mb-6 sm:mb-8 italic italic">
-                  "{activeVehicle.description}"
+                <p className="text-[10px] sm:text-xs text-platinum/40 leading-relaxed line-clamp-2 sm:line-clamp-3 mb-6 sm:mb-8 italic">
+                  &ldquo;{activeVehicle.description}&rdquo;
                 </p>
               )}
 
@@ -199,7 +199,7 @@ export function PremiumListingsCarousel({ vehicles }: PremiumListingsCarouselPro
                 </div>
               </div>
               
-              <Button asChild className="w-full sm:w-auto px-6 py-5 sm:px-8 sm:py-6 bg-platinum text-black hover:bg-white rounded-none font-black uppercase tracking-widest text-[10px] sm:text-xs italic shrink-0">
+              <Button asChild className="w-full sm:w-auto px-6 py-5 sm:px-8 sm:py-6 bg-black text-white hover:bg-white hover:text-black rounded-none font-black uppercase tracking-widest text-[10px] sm:text-xs italic shrink-0 border-2 border-platinum/50 hover:border-white shadow-lg hover:shadow-xl transition-all">
                 <Link href={`/vehicle/${activeVehicle.id}`}>
                   View Artifact <ArrowRight size={14} className="ml-2" />
                 </Link>
@@ -213,9 +213,11 @@ export function PremiumListingsCarousel({ vehicles }: PremiumListingsCarouselPro
           <div 
             className="h-full bg-platinum transition-all duration-1000 linear"
             style={{ 
-              width: `${(currentIndex + 1) / vehicles.length * 100}%`,
-              opacity: isAnimating ? 0 : 0.5
-            } as React.CSSProperties}
+              ['--progress-width' as string]: `${(currentIndex + 1) / vehicles.length * 100}%`,
+              ['--progress-opacity' as string]: isAnimating ? '0' : '0.5',
+              width: 'var(--progress-width)',
+              opacity: 'var(--progress-opacity)'
+            }}
           />
         </div>
       </div>

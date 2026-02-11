@@ -1,8 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { VehicleCard } from '@/components/vehicle-card'
-import { User, ShieldCheck, Calendar, Car } from 'lucide-react'
+import { User, ShieldCheck, Calendar, Car, Building2 } from 'lucide-react'
 import { TrackProfileView } from '@/components/seller/track-profile-view'
+import Image from 'next/image'
 
 export default async function SellerProfilePage({
   params,
@@ -31,6 +32,21 @@ export default async function SellerProfilePage({
     .eq('status', 'active')
     .order('created_at', { ascending: false })
 
+  // If dealer, fetch business profile
+  let dealerProfile = null
+  if (profile.role === 'dealer') {
+    const { data } = await supabase
+      .from('dealer_profiles')
+      .select('*')
+      .eq('id', id)
+      .single()
+    dealerProfile = data
+  }
+
+  const displayName = dealerProfile?.business_name || profile.name
+  const displayLogo = dealerProfile?.business_logo
+  const isVerified = dealerProfile ? dealerProfile.is_verified : profile.is_verified
+
   const joinedDate = new Date(profile.created_at).toLocaleDateString('en-US', {
     month: 'long',
     year: 'numeric'
@@ -41,20 +57,42 @@ export default async function SellerProfilePage({
       <TrackProfileView sellerId={id} />
       {/* Profile Header */}
       <div className="mb-12 animate-fade-up">
-        <div className="flex flex-col md:flex-row gap-8 items-start md:items-center p-8 rounded-3xl bg-platinum/5 border border-platinum/10 backdrop-blur-sm">
-          <div className="w-24 h-24 rounded-full bg-platinum/10 border-2 border-platinum/20 flex items-center justify-center font-bold text-platinum text-3xl">
-            {profile.name?.[0] || <User size={40} />}
+        <div className="flex flex-col md:flex-row gap-8 items-start md:items-center p-8 rounded-3xl bg-platinum/5 border border-platinum/10 backdrop-blur-sm relative overflow-hidden">
+          {dealerProfile && (
+            <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none">
+              <Building2 size={120} />
+            </div>
+          )}
+          
+          <div className="w-24 h-24 rounded-full bg-platinum/10 border-2 border-platinum/20 flex items-center justify-center font-bold text-platinum text-3xl overflow-hidden relative">
+            {displayLogo ? (
+              <Image 
+                src={displayLogo} 
+                alt={displayName} 
+                fill 
+                className="object-contain p-2"
+                unoptimized
+              />
+            ) : (
+              profile.name?.[0] || <User size={40} />
+            )}
           </div>
           
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
               <h1 className="text-3xl font-bold tracking-tight">
-                @{profile.name?.toLowerCase().replace(/\s+/g, '_') || 'dealer'}
+                {dealerProfile ? displayName : `@${displayName?.toLowerCase().replace(/\s+/g, '_')}`}
               </h1>
-              {profile.is_verified && (
+              {isVerified && (
                 <ShieldCheck className="text-platinum w-6 h-6" />
               )}
             </div>
+
+            {dealerProfile?.business_description && (
+              <p className="text-sm text-platinum/60 mb-4 max-w-2xl leading-relaxed">
+                {dealerProfile.business_description}
+              </p>
+            )}
             
             <div className="flex flex-wrap gap-4 text-sm text-muted-foreground font-medium">
               <span className="flex items-center gap-1.5">

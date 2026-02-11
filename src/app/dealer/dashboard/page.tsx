@@ -18,6 +18,7 @@ import { StrategicReach } from '@/components/dashboard/strategic-reach'
 import { LeadManagement } from '@/components/dashboard/lead-management'
 import { InventoryGrid } from '@/components/dashboard/inventory-grid'
 import { HighPotentialAssets } from '@/components/dashboard/high-potential-assets'
+import { DealerOnboarding } from '@/components/dealer/dealer-onboarding'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 
@@ -63,12 +64,13 @@ export default async function DealerDashboardPage() {
     p_dealer_id: dealerId
   })
 
-  // Determine display name for the header
-  // If dealer_staff, we might want to show their name, but usually the dashboard header shows the User's name.
-  // The 'Authenticated Agent' section uses profile.name, which is correct (the specific user).
-
   return (
     <div className="container py-12 md:py-20 min-h-screen max-w-7xl mx-auto px-4 text-white">
+      {/* Onboarding Trigger - Only for actual dealer account, not staff */}
+      {profile.role === 'dealer' && (
+        <DealerOnboarding dealerId={profile.id} />
+      )}
+
       {/* Premium Header Container */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-16 gap-8 pb-8 border-b border-white/5">
         <div className="animate-fade-down">
@@ -97,8 +99,8 @@ export default async function DealerDashboardPage() {
             </Link>
           </Button>
           <Button asChild variant="outline" className="h-14 px-8 rounded-none border-white/5 bg-white/5 hover:bg-white hover:text-black transition-all font-black uppercase tracking-widest">
-            <Link href="/profile">
-              <Settings size={18} className="mr-2" /> System Config
+            <Link href="/dealer/settings">
+              <Settings size={18} className="mr-2" /> Business Config
             </Link>
           </Button>
         </div>
@@ -107,19 +109,19 @@ export default async function DealerDashboardPage() {
       <Tabs defaultValue="overview" className="space-y-12">
         <div className="flex items-center justify-between gap-4 overflow-x-auto pb-2 scrollbar-hide md:overflow-visible">
           <TabsList className="bg-white/5 border border-white/5 p-1 rounded-none h-14 w-full md:w-auto">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-platinum data-[state=active]:text-black rounded-none px-8 font-black uppercase tracking-widest text-[10px] h-full transition-all">
+            <TabsTrigger value="overview" className="data-[state=active]:bg-white data-[state=active]:text-[#0a0a0a] data-[state=active]:shadow-[0_0_20px_rgba(255,255,255,0.3)] rounded-none px-8 font-black uppercase tracking-widest text-[10px] h-full transition-all text-white/40 hover:text-white">
               <LayoutDashboard size={14} className="mr-2" /> Overview
             </TabsTrigger>
-            <TabsTrigger value="inventory" className="data-[state=active]:bg-platinum data-[state=active]:text-black rounded-none px-8 font-black uppercase tracking-widest text-[10px] h-full transition-all">
+            <TabsTrigger value="inventory" className="data-[state=active]:bg-white data-[state=active]:text-[#0a0a0a] data-[state=active]:shadow-[0_0_20px_rgba(255,255,255,0.3)] rounded-none px-8 font-black uppercase tracking-widest text-[10px] h-full transition-all text-white/40 hover:text-white">
               <Car size={14} className="mr-2" /> Marketplace
             </TabsTrigger>
-            <TabsTrigger value="leads" className="data-[state=active]:bg-platinum data-[state=active]:text-black rounded-none px-8 font-black uppercase tracking-widest text-[10px] h-full transition-all relative">
+            <TabsTrigger value="leads" className="data-[state=active]:bg-white data-[state=active]:text-[#0a0a0a] data-[state=active]:shadow-[0_0_20px_rgba(255,255,255,0.3)] rounded-none px-8 font-black uppercase tracking-widest text-[10px] h-full transition-all text-white/40 hover:text-white relative">
               <Users size={14} className="mr-2" /> Buyers
             </TabsTrigger>
-            <TabsTrigger value="performance" className="data-[state=active]:bg-platinum data-[state=active]:text-black rounded-none px-8 font-black uppercase tracking-widest text-[10px] h-full transition-all">
+            <TabsTrigger value="performance" className="data-[state=active]:bg-white data-[state=active]:text-[#0a0a0a] data-[state=active]:shadow-[0_0_20px_rgba(255,255,255,0.3)] rounded-none px-8 font-black uppercase tracking-widest text-[10px] h-full transition-all text-white/40 hover:text-white">
               <BarChart3 size={14} className="mr-2" /> Performance
             </TabsTrigger>
-            <TabsTrigger value="team" className="data-[state=active]:bg-platinum data-[state=active]:text-black rounded-none px-8 font-black uppercase tracking-widest text-[10px] h-full transition-all">
+            <TabsTrigger value="team" className="data-[state=active]:bg-white data-[state=active]:text-[#0a0a0a] data-[state=active]:shadow-[0_0_20px_rgba(255,255,255,0.3)] rounded-none px-8 font-black uppercase tracking-widest text-[10px] h-full transition-all text-white/40 hover:text-white">
               <Users size={14} className="mr-2" /> Team
             </TabsTrigger>
           </TabsList>

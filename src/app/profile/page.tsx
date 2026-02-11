@@ -20,6 +20,11 @@ export default async function ProfilePage() {
     redirect('/register')
   }
 
+  // Redirect dealers to their business profile page
+  if (profile.role === 'dealer') {
+    redirect('/dealer/settings')
+  }
+
   return (
     <div className="container py-12 md:py-24 min-h-screen">
       <div className="mb-12 animate-fade-down">

@@ -252,7 +252,8 @@ export default function ListingsPage() {
                 />
                 <Button 
                   onClick={handleSearch}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-6 bg-platinum text-black hover:bg-white rounded-none font-black uppercase tracking-widest text-[10px] italic z-10"
+                  variant="platinum"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-6 rounded-none font-black uppercase tracking-widest text-[10px] italic z-10"
                 >
                   Search
                 </Button>

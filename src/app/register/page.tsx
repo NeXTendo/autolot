@@ -8,16 +8,18 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
 import { useToast } from '@/hooks/use-toast'
-import { Loader2, Store } from 'lucide-react'
+import { Loader2, User, Store, ShieldCheck } from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+type AccountType = 'registered' | 'dealer' | 'inspector'
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [isDealer, setIsDealer] = useState(false)
+  const [accountType, setAccountType] = useState<AccountType>('registered')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
@@ -27,47 +29,14 @@ export default function RegisterPage() {
     e.preventDefault()
     setLoading(true)
 
-    // Client-side validation
     if (!fullName || !email || !password || !confirmPassword) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Input",
-        description: "Please fill in all required fields.",
-      })
+      toast({ variant: "destructive", title: "Invalid Input", description: "Please fill in all required fields." })
       setLoading(false)
       return
     }
 
-    // Email format validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Email",
-        description: "Please enter a valid email address.",
-      })
-      setLoading(false)
-      return
-    }
-
-    // Password strength validation
-    if (password.length < 6) {
-      toast({
-        variant: "destructive",
-        title: "Weak Password",
-        description: "Password must be at least 6 characters long.",
-      })
-      setLoading(false)
-      return
-    }
-
-    // Password match validation
     if (password !== confirmPassword) {
-      toast({
-        variant: "destructive",
-        title: "Password Mismatch",
-        description: "Passwords do not match. Please try again.",
-      })
+      toast({ variant: "destructive", title: "Password Mismatch", description: "Passwords do not match." })
       setLoading(false)
       return
     }
@@ -79,32 +48,13 @@ export default function RegisterPage() {
         options: {
           data: {
             full_name: fullName,
-            role: isDealer ? 'dealer' : 'registered', // Set role based on toggle
+            role: accountType,
           },
         },
       })
 
       if (error) {
-        // Handle specific error cases
-        if (error.message.includes('already registered')) {
-          toast({
-            variant: "destructive",
-            title: "Email Already Exists",
-            description: "An account with this email already exists. Please sign in instead.",
-          })
-        } else if (error.message.includes('Password should be')) {
-          toast({
-            variant: "destructive",
-            title: "Weak Password",
-            description: error.message,
-          })
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Registration Failed",
-            description: error.message || "An unexpected error occurred.",
-          })
-        }
+        toast({ variant: "destructive", title: "Registration Failed", description: error.message })
         setLoading(false)
         return
       }
@@ -112,27 +62,28 @@ export default function RegisterPage() {
       if (data.user) {
         toast({
           variant: "success",
-          title: isDealer ? "Dealer Account Created!" : "Account Created!",
-          description: isDealer 
-            ? "Welcome partner. Redirecting to dealer setup..." 
-            : "Welcome to AutoLot. Redirecting to dashboard...",
+          title: "Account Created!",
+          description: `Welcome to AutoLot. Redirecting to your dashboard...`,
         })
         
-        // Redirect based on role
         setTimeout(() => {
-          if (isDealer) {
-            router.push('/dealer/dashboard') // Or prompt to create profile
+          if (accountType === 'dealer') {
+            router.push('/dealer/dashboard')
+          } else if (accountType === 'inspector') {
+            router.push('/inspector/dashboard')
           } else {
             router.push('/dashboard')
           }
           router.refresh()
         }, 1500)
       }
-    } catch {
-      toast({
-        variant: "destructive",
-        title: "Network Error",
-        description: "Unable to connect. Please check your internet connection.",
+    } catch (err) {
+      console.error('Registration error:', err)
+      const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred during database synchronization. Please try again or contact support."
+      toast({ 
+        variant: "destructive", 
+        title: "Registration Failed", 
+        description: errorMessage
       })
       setLoading(false)
     }
@@ -182,9 +133,6 @@ export default function RegisterPage() {
                 disabled={loading}
                 required
               />
-              <p className="text-xs text-muted-foreground">
-                Must be at least 6 characters
-              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirm Password</Label>
@@ -199,38 +147,45 @@ export default function RegisterPage() {
               />
             </div>
 
-            {/* Dealer Toggle */}
-            <div className="flex items-center space-x-4 rounded-lg border p-4 bg-muted/40">
-              <Store className="h-6 w-6 text-primary" />
-              <div className="flex-1 space-y-1">
-                <Label htmlFor="dealer-mode" className="text-sm font-medium leading-none">
-                  Register as Business
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  I am a dealer or automotive business
-                </p>
+            <div className="space-y-3">
+              <Label>Account Type</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {(['registered', 'dealer', 'inspector'] as const).map((id) => {
+                  const typeMap = {
+                    registered: { label: 'Buyer', icon: User },
+                    dealer: { label: 'Dealer', icon: Store },
+                    inspector: { label: 'Inspector', icon: ShieldCheck }
+                  }
+                  const type = typeMap[id]
+                  const Icon = type.icon
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setAccountType(id)}
+                      className={cn(
+                        "flex flex-col items-center justify-center p-3 border text-[10px] font-black uppercase tracking-widest gap-2 transition-all",
+                        accountType === id 
+                          ? "bg-platinum text-black border-platinum" 
+                          : "bg-white/5 border-white/10 text-platinum/40 hover:border-white/20"
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {type.label}
+                    </button>
+                  )
+                })}
               </div>
-              <Switch
-                id="dealer-mode"
-                checked={isDealer}
-                onCheckedChange={setIsDealer}
-                disabled={loading}
-              />
             </div>
 
-            <Button
-              type="submit"
-              variant="platinum"
-              className="w-full"
-              disabled={loading}
-            >
+            <Button type="submit" variant="platinum" className="w-full" disabled={loading}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Creating Account...
                 </>
               ) : (
-                isDealer ? 'Register as Dealer' : 'Register for Access'
+                `Register as ${accountType}`
               )}
             </Button>
           </form>

@@ -78,7 +78,6 @@ BEGIN
       'phone', p.phone,
       'role', p.role,
       'created_at', p.created_at,
-      'last_sign_in_at', p.last_sign_in_at,
       'listing_count', p.listing_count,
       'dealer_profile', (
         SELECT jsonb_build_object('business_name', dp.business_name)

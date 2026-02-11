@@ -358,6 +358,24 @@ export async function recordVehicleView(
 }
 
 /**
+ * Record full engagement (views + impressions)
+ */
+export async function trackVehicleEngagement(
+  supabase: SupabaseClient,
+  vehicleId: string,
+  sellerId: string
+): Promise<void> {
+  const { error } = await supabase.rpc('track_vehicle_engagement', {
+    p_vehicle_id: vehicleId,
+    p_seller_id: sellerId
+  })
+
+  if (error) {
+    console.error('❌ Error tracking vehicle engagement:', error)
+  }
+}
+
+/**
  * Get trending makes based on actual view data
  */
 export async function getTrendingMakes(

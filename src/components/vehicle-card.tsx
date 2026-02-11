@@ -49,18 +49,18 @@ export function VehicleCard({ vehicle }: VehicleCardProps) {
 
   return (
     <Card className={cn(
-      "group overflow-hidden hover:border-primary/50 transition-all duration-500 flex flex-col h-full bg-card/50 backdrop-blur-sm relative rounded-none",
-      vehicle.is_premium && "ring-1 ring-platinum/20 shadow-[0_0_30px_rgba(229,228,226,0.05)] border-platinum/30"
+      "group hover:border-primary/50 transition-all duration-500 flex flex-col h-full bg-card/50 backdrop-blur-sm relative rounded-none",
+      vehicle.is_premium && "ring-1 ring-platinum/20 shadow-[0_0_0_8px_rgba(229,228,226,0.03),0_0_0_16px_rgba(229,228,226,0.02)] border-platinum/30"
     )}>
       {vehicle.is_premium && (
-        <div className="absolute top-0 left-0 w-16 h-16 z-20 pointer-events-none overflow-hidden">
-          <div className="absolute top-0 left-0 w-[141%] h-3 bg-platinum/90 text-black text-[7px] font-black uppercase tracking-[0.2em] flex items-center justify-center -rotate-45 -translate-x-[30%] translate-y-[40%] shadow-lg">
+        <div className="absolute top-0 left-0 w-20 h-20 z-20 pointer-events-none overflow-hidden">
+          <div className="absolute top-0 left-0 w-[141%] h-3.5 bg-platinum/95 text-black text-[7px] font-black uppercase tracking-[0.2em] flex items-center justify-center -rotate-45 -translate-x-[28%] translate-y-[50%] shadow-lg">
             Premium
           </div>
         </div>
       )}
       {/* Image Section */}
-      <div className="relative aspect-[4/3] overflow-hidden">
+      <div className="relative aspect-4/3 overflow-hidden">
         <Link href={`/vehicle/${vehicle.id}`} className="block h-full w-full">
           <Image 
             src={images[currentImageIndex]} 
@@ -70,28 +70,33 @@ export function VehicleCard({ vehicle }: VehicleCardProps) {
           />
         </Link>
         
-        {/* Navigation Arrows (Only if multiple images) */}
+        {/* Navigation Zones (Only if multiple images) */}
         {images.length > 1 && (
           <>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-none bg-background/20 hover:bg-background/40 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity"
+            {/* Left navigation zone */}
+            <button
               onClick={prevImage}
+              className="absolute left-0 top-0 h-full w-1/3 z-10 cursor-pointer group/nav"
+              aria-label="Previous image"
             >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-none bg-background/20 hover:bg-background/40 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity"
+              <div className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-none bg-background/20 backdrop-blur-md opacity-0 group-hover/nav:opacity-100 transition-opacity flex items-center justify-center">
+                <ChevronLeft className="h-4 w-4" />
+              </div>
+            </button>
+            
+            {/* Right navigation zone */}
+            <button
               onClick={nextImage}
+              className="absolute right-0 top-0 h-full w-1/3 z-10 cursor-pointer group/nav"
+              aria-label="Next image"
             >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-none bg-background/20 backdrop-blur-md opacity-0 group-hover/nav:opacity-100 transition-opacity flex items-center justify-center">
+                <ChevronRight className="h-4 w-4" />
+              </div>
+            </button>
             
             {/* Pagination Dots */}
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 px-2 py-1 rounded-none bg-black/20 backdrop-blur-sm">
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 px-2 py-1 rounded-none bg-black/20 backdrop-blur-sm z-20">
               {images.map((_: string, idx: number) => (
                 <div 
                   key={idx}
@@ -119,8 +124,8 @@ export function VehicleCard({ vehicle }: VehicleCardProps) {
       </div>
 
       {/* Content Section */}
-      <CardContent className="p-5 flex flex-col flex-grow">
-        <Link href={`/vehicle/${vehicle.id}`} className="hover:underline decoration-primary/30 underline-offset-4 flex-grow">
+      <CardContent className="p-5 flex flex-col grow">
+        <Link href={`/vehicle/${vehicle.id}`} className="hover:underline decoration-primary/30 underline-offset-4 grow">
           <h5 className="text-lg font-bold leading-tight mb-1">
             {vehicle.make} <span className="font-light text-muted-foreground">{vehicle.model}</span>
           </h5>

@@ -149,7 +149,12 @@ export default async function VehiclePage({
 
               {/* Refined Seller Contact */}
               <div className="pt-4">
-                <SellerContact seller={vehicle.profiles} vehicle={vehicle} isOwner={isOwner} />
+                <SellerContact 
+                  seller={vehicle.profiles} 
+                  dealerProfile={dealerProfile}
+                  vehicle={vehicle} 
+                  isOwner={isOwner} 
+                />
               </div>
             </div>
 

@@ -62,20 +62,36 @@ export default function AdminDealerVerificationPage() {
     }
 
     // Load dealers from profiles joined with dealer_profiles
-    const { data } = await supabase
+    // Use the hint syntax to specify which foreign key relationship to use
+    // (dealer_profiles has two FKs to profiles: id and verified_by)
+    console.log('[Dealer Verification] Starting to load dealers...')
+    const { data, error } = await supabase
       .from('profiles')
       .select(`
         *,
-        dealer_profiles (*)
+        dealer_profiles!dealer_profiles_id_fkey (*)
       `)
       .eq('role', 'dealer')
       .order('created_at', { ascending: false })
 
+    console.log('[Dealer Verification] Query result:', { data, error })
+
+    if (error) {
+      console.error('[Dealer Verification] Error loading dealers:', error)
+    }
+
     if (data) {
+      console.log('[Dealer Verification] Raw data count:', data.length)
       // Map to DealerProfile interface
       const mappedDealers: DealerProfile[] = data.map((profile: DealerProfileResponse) => {
         const rawDp = profile.dealer_profiles
         const dp = Array.isArray(rawDp) ? rawDp[0] : rawDp
+        console.log('[Dealer Verification] Mapping dealer:', { 
+          profileId: profile.id, 
+          rawDp, 
+          dp,
+          hasProfile: !!dp 
+        })
         return {
           id: profile.id,
           business_name: dp?.business_name || profile.name || 'Unknown Dealer',
@@ -88,6 +104,7 @@ export default function AdminDealerVerificationPage() {
           is_incomplete: !dp
         }
       })
+      console.log('[Dealer Verification] Mapped dealers:', mappedDealers)
       setDealers(mappedDealers)
     }
 

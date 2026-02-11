@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { User, Star } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import { SellerReviewsDialog } from "./seller-reviews-dialog"
 
 interface SellerContactProps {
@@ -13,7 +14,14 @@ interface SellerContactProps {
     name: string
     phone?: string
     email?: string
+    role?: string
   }
+  dealerProfile?: {
+    business_name: string
+    business_logo: string | null
+    business_phone: string | null
+    business_email: string | null
+  } | null
   vehicle: {
     make: string
     model: string
@@ -22,28 +30,44 @@ interface SellerContactProps {
   isOwner?: boolean
 }
 
-export function SellerContact({ seller, vehicle, isOwner }: SellerContactProps) {
-  const whatsappNumber = seller.phone?.replace(/\D/g, '')
-  const whatsappMsg = encodeURIComponent(`Hi ${seller.name}, I'm interested in the ${vehicle.make} ${vehicle.model} (ID: ${vehicle.id}) on AutoLot.`)
+export function SellerContact({ seller, dealerProfile, vehicle, isOwner }: SellerContactProps) {
+  // Use dealer info if available, otherwise personal info
+  const displayName = dealerProfile?.business_name || seller.name
+  const displayPhone = dealerProfile?.business_phone || seller.phone
+  const displayEmail = dealerProfile?.business_email || seller.email
+  const displayLogo = dealerProfile?.business_logo
+
+  const whatsappNumber = displayPhone?.replace(/\D/g, '')
+  const whatsappMsg = encodeURIComponent(`Hi ${displayName}, I'm interested in the ${vehicle.make} ${vehicle.model} (ID: ${vehicle.id}) on AutoLot.`)
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${whatsappMsg}`
   
   const emailSubject = encodeURIComponent(`Inquiry: ${vehicle.make} ${vehicle.model}`)
-  const emailBody = encodeURIComponent(`Hi ${seller.name},\n\nI saw your ${vehicle.make} ${vehicle.model} on AutoLot and I'm interested in learning more.\n\nVehicle Link: ${typeof window !== 'undefined' ? window.location.href : ''}`)
-  const emailUrl = `mailto:${seller.email}?subject=${emailSubject}&body=${emailBody}`
+  const emailBody = encodeURIComponent(`Hi ${displayName},\n\nI saw your ${vehicle.make} ${vehicle.model} on AutoLot and I'm interested in learning more.\n\nVehicle Link: ${typeof window !== 'undefined' ? window.location.href : ''}`)
+  const emailUrl = `mailto:${displayEmail}?subject=${emailSubject}&body=${emailBody}`
 
   return (
     <Card className="overflow-hidden border-primary/20 bg-card/50 backdrop-blur-sm">
       <CardContent className="p-6">
         <div className="flex gap-4 items-center mb-6">
-          <div className="w-14 h-14 rounded-full bg-platinum/10 border border-platinum/20 flex items-center justify-center font-bold text-platinum">
-            <User className="w-7 h-7" />
+          <div className="w-14 h-14 rounded-full bg-platinum/10 border border-platinum/20 flex items-center justify-center font-bold text-platinum overflow-hidden relative">
+            {displayLogo ? (
+              <Image 
+                src={displayLogo} 
+                alt={displayName} 
+                fill 
+                className="object-contain p-2"
+                unoptimized
+              />
+            ) : (
+              <User className="w-7 h-7" />
+            )}
           </div>
           <div className="min-w-0 flex-1">
             <div className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-medium mb-0.5">
               {isOwner ? "Your Listing" : "Listed By"}
             </div>
-            <div className="text-lg font-bold truncate tracking-tight text-white mb-1" title={seller.name || 'Authorized Dealer'}>
-              @{seller.name?.toLowerCase().replace(/\s+/g, '_') || 'dealer'}
+            <div className="text-lg font-bold truncate tracking-tight text-white mb-1" title={displayName}>
+              {dealerProfile ? displayName : `@${displayName.toLowerCase().replace(/\s+/g, '_')}`}
             </div>
             <div className="flex items-center gap-4 mt-2">
               <Link 
@@ -68,11 +92,11 @@ export function SellerContact({ seller, vehicle, isOwner }: SellerContactProps) 
 
         {!isOwner && (
           <div className="grid grid-cols-1 gap-3 mb-6">
-            {seller.phone && (
+            {displayPhone && (
               <Button variant="outline" className="w-full justify-start gap-3 h-12" asChild>
-                <a href={`tel:${seller.phone}`}>
+                <a href={`tel:${displayPhone}`}>
                   <Phone className="w-4 h-4 text-platinum" />
-                  <span>Call {seller.phone}</span>
+                  <span>Call {displayPhone}</span>
                 </a>
               </Button>
             )}
@@ -84,7 +108,7 @@ export function SellerContact({ seller, vehicle, isOwner }: SellerContactProps) 
               </a>
             </Button>
 
-            {seller.phone && (
+            {displayPhone && (
               <Button variant="platinum" className="w-full justify-start gap-3 h-12" asChild>
                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
                   <MessageCircle className="w-4 h-4" />

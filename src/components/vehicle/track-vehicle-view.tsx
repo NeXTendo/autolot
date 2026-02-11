@@ -2,12 +2,13 @@
 
 import { useEffect } from "react"
 import { trackView } from "@/lib/utils/view-history"
-import { recordVehicleView } from "@/lib/supabase/rpc"
+import { recordVehicleView, trackVehicleEngagement } from "@/lib/supabase/rpc"
 import { createClient } from "@/lib/supabase/client"
 
 interface TrackVehicleViewProps {
   vehicle: {
     id: string
+    seller_id: string
     make: string
     model: string
     year: number
@@ -27,8 +28,12 @@ export function TrackVehicleView({ vehicle }: TrackVehicleViewProps) {
   const supabase = createClient()
 
   useEffect(() => {
-    // Record DB view
-    recordVehicleView(supabase, vehicle.id)
+    // Record DB engagement (views + impressions)
+    if (vehicle.seller_id) {
+      trackVehicleEngagement(supabase, vehicle.id, vehicle.seller_id)
+    } else {
+      recordVehicleView(supabase, vehicle.id)
+    }
 
     trackView({
       id: vehicle.id,
@@ -42,7 +47,7 @@ export function TrackVehicleView({ vehicle }: TrackVehicleViewProps) {
       image: vehicle.images?.[0] || 'https://images.unsplash.com/photo-1542281286-9e0a16bb7366?auto=format&fit=crop&q=80&w=2070',
       seller: vehicle.seller
     })
-  }, [vehicle])
+  }, [vehicle, supabase])
 
   return null
 }

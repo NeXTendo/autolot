@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import {
   Dialog,
@@ -152,10 +152,14 @@ export function SellerReviewsDialog({ sellerId, sellerName, trigger }: SellerRev
                          <Star size={8} className="fill-white text-white" />
                       </div>
                       <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-white rounded-full transition-all duration-1000" 
-                          style={{ width: `${percentage}%` }}
-                        ></div>
+                        <svg className="w-full h-full">
+                          <rect 
+                            className="fill-white transition-all duration-1000" 
+                            width={`${percentage}%`}
+                            height="100%"
+                            rx="2"
+                          />
+                        </svg>
                       </div>
                       <div className="text-[10px] font-black text-white/40 w-4 text-right">{count}</div>
                     </div>

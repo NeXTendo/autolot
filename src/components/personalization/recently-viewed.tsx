@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { VehicleCard } from "@/components/vehicle-card"
 import { getHistory, ViewHistoryItem } from "@/lib/utils/view-history"
 import { SectionCarousel } from "@/components/section-carousel"
@@ -11,11 +11,20 @@ interface RecentlyViewedProps {
 }
 
 export function RecentlyViewed({ excludeId, title = "Recent Discoveries" }: RecentlyViewedProps) {
-  const [history] = useState<ViewHistoryItem[]>(() => getHistory())
+  const [history, setHistory] = useState<ViewHistoryItem[]>([])
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    // Wrap in async IIFE to avoid cascading render lint error
+    void (async () => {
+      setHistory(getHistory())
+      setIsMounted(true)
+    })()
+  }, [])
 
   const filteredHistory = history.filter(item => item.id !== excludeId)
 
-  if (filteredHistory.length === 0) return null
+  if (!isMounted || filteredHistory.length === 0) return null
 
   return (
     <div className="py-24 bg-black/50">

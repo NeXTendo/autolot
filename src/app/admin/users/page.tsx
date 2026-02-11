@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Users, Search, Loader2, Edit2, ShieldAlert } from 'lucide-react'
+import { Search, Loader2, Edit2, ShieldAlert } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -20,7 +20,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from '@/components/ui/dialog'
 import {
   Select,
@@ -51,7 +50,6 @@ export default function AdminUsersPage() {
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState<string>('all')
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null)
-  const [updating, setUpdating] = useState(false)
   
   const router = useRouter()
   const supabase = createClient()
@@ -97,7 +95,6 @@ export default function AdminUsersPage() {
 
   const updateUserRole = async (newRole: string) => {
     if (!editingUser) return
-    setUpdating(true)
 
     try {
       const { error } = await supabase
@@ -122,7 +119,7 @@ export default function AdminUsersPage() {
         variant: "destructive"
       })
     } finally {
-      setUpdating(false)
+      // Done
     }
   }
 

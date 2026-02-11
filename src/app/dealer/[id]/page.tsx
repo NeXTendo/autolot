@@ -4,6 +4,7 @@ import { VehicleCard } from '@/components/vehicle-card'
 import { Building2, Calendar, Car, MapPin, Phone, Mail, Globe } from 'lucide-react'
 import { TrackProfileView } from '@/components/seller/track-profile-view'
 import { DealerBadge } from '@/components/dealer/dealer-badge'
+import Image from 'next/image'
 import type { DealerProfile } from '@/lib/types/roles'
 
 interface DealerStats {
@@ -50,13 +51,20 @@ export default async function DealerProfilePage({
       <TrackProfileView sellerId={id} />
       
       {/* Hero Section with Dealer Branding */}
-      <div className="relative bg-gradient-to-b from-platinum/5 to-transparent border-b border-white/5">
+      <div className="relative bg-linear-to-b from-platinum/5 to-transparent border-b border-white/5">
         <div className="container py-16 md:py-24">
           <div className="flex flex-col md:flex-row gap-8 items-start">
             {/* Logo */}
             <div className="w-32 h-32 rounded-2xl bg-white/5 border-2 border-platinum/20 flex items-center justify-center overflow-hidden">
               {profile.business_logo ? (
-                <img src={profile.business_logo} alt={profile.business_name} className="w-full h-full object-cover" />
+                <div className="relative w-full h-full">
+                  <Image 
+                    src={profile.business_logo} 
+                    alt={profile.business_name} 
+                    fill 
+                    className="object-cover" 
+                  />
+                </div>
               ) : (
                 <Building2 size={48} className="text-platinum/40" />
               )}

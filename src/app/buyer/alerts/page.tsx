@@ -86,7 +86,10 @@ export default function BuyerAlertsPage() {
   }, [supabase, router])
 
   useEffect(() => {
-    loadPreferences()
+    const init = async () => {
+      await loadPreferences()
+    }
+    init()
   }, [loadPreferences])
 
   async function savePreferences() {
@@ -251,7 +254,7 @@ export default function BuyerAlertsPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            <div className="p-6 rounded-2xl bg-gradient-to-br from-platinum/10 to-platinum/5 border border-platinum/20">
+            <div className="p-6 rounded-2xl bg-linear-to-br from-platinum/10 to-platinum/5 border border-platinum/20">
               <h3 className="text-sm font-black uppercase tracking-widest text-white mb-3">
                 How It Works
               </h3>

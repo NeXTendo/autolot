@@ -4,8 +4,8 @@
 [role="menu"],
 [role="listbox"],
 [role="dialog"] {
-  backdrop-filter: blur(16px) !important;
   -webkit-backdrop-filter: blur(16px) !important;
+  backdrop-filter: blur(16px) !important;
 }
 
 @media (max-width: 768px) {
@@ -13,7 +13,7 @@
   [data-radix-dropdown-menu-content],
   [data-radix-dialog-content] {
     background-color: hsl(var(--background) / 0.98) !important;
-    backdrop-filter: blur(20px) !important;
     -webkit-backdrop-filter: blur(20px) !important;
+    backdrop-filter: blur(20px) !important;
   }
 }

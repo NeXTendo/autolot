@@ -14,18 +14,21 @@ interface MessageWithProfile {
   profiles: LeadProfile | null
 }
 
-export function StrategicReach() {
+interface StrategicReachProps {
+  sellerId: string
+}
+
+export function StrategicReach({ sellerId }: StrategicReachProps) {
   const [data, setData] = useState<{ reach: number; leads: LeadProfile[] } | null>(null)
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
   const fetchData = useCallback(async (isMounted = { current: true }) => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user || !isMounted.current) return
+    if (!isMounted.current) return
 
     // Fetch stats (Reach)
     const { data: stats } = await supabase.rpc('get_seller_analytics_v2', {
-      p_seller_id: user.id
+      p_seller_id: sellerId
     })
 
     if (!isMounted.current) return
@@ -34,7 +37,7 @@ export function StrategicReach() {
     const { data: leads } = await supabase
       .from('messages')
       .select('profiles!messages_sender_id_fkey(name, id)')
-      .eq('seller_id', user.id)
+      .eq('seller_id', sellerId)
       .order('created_at', { ascending: false })
       .limit(5) as { data: MessageWithProfile[] | null }
 
@@ -48,7 +51,7 @@ export function StrategicReach() {
       })
     }
     setLoading(false)
-  }, [supabase])
+  }, [supabase, sellerId])
 
   useEffect(() => {
     const isMounted = { current: true }

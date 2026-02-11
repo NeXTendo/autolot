@@ -110,8 +110,8 @@
 /* Premium Enhancements */
 .glass-panel {
   background-color: var(--glass-bg);
-  backdrop-filter: blur(48px);
   -webkit-backdrop-filter: blur(48px);
+  backdrop-filter: blur(48px);
   border: 1px solid var(--glass-border);
   border-radius: 1rem;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -171,8 +171,10 @@
 }
 
 .hide-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  -ms-overflow-style: none; /* IE and Edge */
+  @supports (scrollbar-width: none) {
+    scrollbar-width: none; /* Firefox */
+  }
 }
 
 .hide-scrollbar::-webkit-scrollbar {

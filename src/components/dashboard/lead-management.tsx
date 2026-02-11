@@ -28,19 +28,20 @@ function formatLeadDate(dateStr: string) {
   }).format(new Date(dateStr))
 }
 
-export function LeadManagement() {
+interface LeadManagementProps {
+  sellerId: string
+}
+
+export function LeadManagement({ sellerId }: LeadManagementProps) {
   const [leads, setLeads] = useState<SellerLead[]>([])
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
   const fetchLeads = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
-    const data = await getSellerLeads(supabase, user.id)
+    const data = await getSellerLeads(supabase, sellerId)
     setLeads(data)
     setLoading(false)
-  }, [supabase])
+  }, [supabase, sellerId])
 
   useEffect(() => {
     // Real-time subscription to messages

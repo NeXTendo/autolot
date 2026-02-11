@@ -22,13 +22,13 @@ export function ImageGallery({ images, alt }: ImageGalleryProps) {
     ? images 
     : ['https://images.unsplash.com/photo-1542281286-9e0a16bb7366?auto=format&fit=crop&q=80&w=2070']
 
-  const goToPrevious = () => {
+  const goToPrevious = React.useCallback(() => {
     setCurrentIndex((prev) => (prev === 0 ? imageList.length - 1 : prev - 1))
-  }
+  }, [imageList.length])
 
-  const goToNext = () => {
+  const goToNext = React.useCallback(() => {
     setCurrentIndex((prev) => (prev === imageList.length - 1 ? 0 : prev + 1))
-  }
+  }, [imageList.length])
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.targetTouches[0].clientX)
@@ -67,7 +67,7 @@ export function ImageGallery({ images, alt }: ImageGalleryProps) {
     if (e.key === 'ArrowLeft') goToPrevious()
     if (e.key === 'ArrowRight') goToNext()
     if (e.key === 'Escape') setIsFullscreen(false)
-  }, [])
+  }, [goToNext, goToPrevious])
 
   React.useEffect(() => {
     if (isFullscreen) {
@@ -132,18 +132,18 @@ export function ImageGallery({ images, alt }: ImageGalleryProps) {
           </div>
         </Card>
 
-        {/* Thumbnail Grid */}
+        {/* Thumbnail Carousel (Mobile) / Grid (Desktop) */}
         {imageList.length > 1 && (
-          <div className="grid grid-cols-4 gap-4 overflow-x-auto pb-2">
+          <div className="flex md:grid md:grid-cols-4 gap-4 overflow-x-auto pb-2 hide-scrollbar snap-x snap-mandatory">
             {imageList.map((image, idx) => (
               <Card
                 key={idx}
                 onClick={() => setCurrentIndex(idx)}
                 className={cn(
-                  "overflow-hidden cursor-pointer transition-all flex-shrink-0",
+                  "overflow-hidden cursor-pointer transition-all shrink-0 w-24 md:w-auto snap-center",
                   currentIndex === idx 
                     ? "ring-2 ring-primary scale-105" 
-                    : "hover:ring-2 hover:ring-border"
+                    : "hover:ring-2 hover:ring-border opacity-70 hover:opacity-100"
                 )}
               >
                 <div className="relative aspect-video">
@@ -162,7 +162,7 @@ export function ImageGallery({ images, alt }: ImageGalleryProps) {
 
       {/* Fullscreen Modal */}
       {isFullscreen && (
-        <div className="fixed inset-0 z-[9999] bg-black flex items-center justify-center">
+        <div className="fixed inset-0 z-9999 bg-black flex items-center justify-center">
           {/* Close Button */}
           <Button
             variant="ghost"

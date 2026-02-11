@@ -73,7 +73,7 @@ export default async function SellerProfilePage({
       {/* Inventory Grid */}
       <div className="space-y-8 animate-fade-up dela-150">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold uppercase tracking-widest text-sm flex items-center gap-3">
+          <h2 className="text-2xl font-bold uppercase tracking-widest flex items-center gap-3">
             <span className="w-8 h-px bg-platinum/30"></span>
             Current Inventory
           </h2>

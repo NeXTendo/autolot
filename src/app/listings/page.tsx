@@ -1,28 +1,36 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
-import { Search, SlidersHorizontal, X, LayoutGrid, ListFilter, RotateCcw } from "lucide-react"
+import { Search, SlidersHorizontal, X, ListFilter, RotateCcw } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { searchVehicles, type Vehicle, type SearchFilters as FilterType } from "@/lib/supabase/rpc"
 import { VehicleCard } from "@/components/vehicle-card"
 import { createClient } from "@/lib/supabase/client"
-import { SearchFilters } from "@/components/listings/search-filters"
+import { SearchFilters as SearchFiltersComponent } from "@/components/listings/search-filters"
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
 import { useSearchParams } from "next/navigation"
 import { getSearchSuggestions, type SearchSuggestions as SuggestionsType } from "@/lib/supabase/rpc"
 import { SearchSuggestions } from "@/components/listings/search-suggestions"
+import { InventoryNavigator } from "@/components/listings/inventory-navigator"
+import { PremiumListingsCarousel } from "@/components/listings/premium-listings-carousel"
 
 export default function ListingsPage() {
   const searchParams = useSearchParams()
   const [filters, setFilters] = useState<FilterType>({})
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const [premiumVehicles, setPremiumVehicles] = useState<Vehicle[]>([])
+  const [totalCount, setTotalCount] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [suggestions, setSuggestions] = useState<SuggestionsType>({ makes: [], models: [], listings: [] })
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
+  const [page, setPage] = useState(0)
+  const [hasMore, setHasMore] = useState(true)
+  const ITEMS_PER_PAGE = 12
   const searchContainerRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
 
@@ -65,6 +73,25 @@ export default function ListingsPage() {
     return () => clearTimeout(timer)
   }, [searchQuery, supabase])
 
+  // Fetch Premium Vehicles
+  useEffect(() => {
+    async function fetchPremium() {
+      try {
+        const result = await searchVehicles(supabase, { 
+          ...filters,
+          is_premium: true, 
+          page_limit: 8,
+          sort_by: 'created_at',
+          sort_order: 'desc'
+        })
+        setPremiumVehicles(result.vehicles || [])
+      } catch (err) {
+        console.error("Failed to fetch premium vehicles", err)
+      }
+    }
+    fetchPremium()
+  }, [supabase, filters])
+
   // Sync URL parameters to filters
   useEffect(() => {
     const params: FilterType = {}
@@ -73,9 +100,15 @@ export default function ListingsPage() {
       if (key === 'is_premium') {
         params.is_premium = value === 'true'
       } else if (key === 'min_price' || key === 'max_price' || key === 'min_year' || key === 'max_year' || key === 'min_mileage' || key === 'max_mileage') {
-        params[key as keyof FilterType] = parseInt(value) as any
+        const k = key as 'min_price' | 'max_price' | 'min_year' | 'max_year' | 'min_mileage' | 'max_mileage'
+        params[k] = parseInt(value)
+      } else if (key === 'search_condition') {
+        params.search_condition = value as FilterType['search_condition']
       } else {
-        (params as any)[key] = value
+        const k = key as keyof FilterType
+        if (k === 'query' || k === 'search_make' || k === 'search_model' || k === 'body_type' || k === 'fuel_type' || k === 'transmission' || k === 'drivetrain') {
+          params[k] = value
+        }
       }
     })
 
@@ -88,24 +121,45 @@ export default function ListingsPage() {
     setFilters(params)
   }, [searchParams])
 
-  const fetchVehicles = useCallback(async (currentFilters: FilterType) => {
-    setLoading(true)
+  const fetchVehicles = useCallback(async (currentFilters: FilterType, pageToFetch = 0) => {
+    if (pageToFetch === 0) setLoading(true)
+    else setIsLoadingMore(true)
+
     try {
       const result = await searchVehicles(supabase, {
         ...currentFilters,
-        page_limit: 50,
-        page_offset: 0,
+        // Include all listings (premium + standard) in the main grid
+        is_premium: currentFilters.is_premium,
+        page_limit: ITEMS_PER_PAGE,
+        page_offset: pageToFetch * ITEMS_PER_PAGE,
       })
-      setVehicles(result.vehicles || [])
+
+      const newVehicles = result.vehicles || []
+      
+      if (pageToFetch > 0) {
+        setVehicles(prev => [...prev, ...newVehicles])
+      } else {
+        setVehicles(newVehicles)
+        setTotalCount(result.total || 0)
+      }
+
+      setPage(pageToFetch)
+      setHasMore(newVehicles.length === ITEMS_PER_PAGE)
       setIsFilterSheetOpen(false)
     } finally {
       setLoading(false)
+      setIsLoadingMore(false)
     }
   }, [supabase])
 
+  const handleLoadMore = () => {
+    fetchVehicles(filters, page + 1)
+  }
+
   useEffect(() => {
     // Only fetch if filters are not empty or if it's the initial load (which empty filters is fine)
-    fetchVehicles(filters)
+    // Pass 0 to indicate this is a fresh fetch (resetting list)
+    fetchVehicles(filters, 0)
   }, [fetchVehicles, filters])
 
   const handleSearch = () => {
@@ -125,7 +179,7 @@ export default function ListingsPage() {
     if (key === 'search_make' || key === 'query') setSearchQuery("")
   }
 
-  const activeFiltersCount = Object.keys(filters).length
+  const activeFiltersCount = Object.values(filters).filter(v => v !== undefined && v !== null && v !== "").length
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -148,26 +202,37 @@ export default function ListingsPage() {
             </p>
           </div>
           
-          <div className="flex items-center gap-3">
-            <div className="text-right">
-              <div className="text-2xl font-black tabular-nums">{vehicles.length}</div>
-              <div className="text-[10px] font-black uppercase tracking-widest text-platinum/20">Active Listings</div>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full md:w-auto">
+            <div className="flex items-center gap-3 self-end sm:self-auto">
+              <div className="text-right">
+                <div className="text-2xl font-black tabular-nums">{totalCount}</div>
+                <div className="text-[10px] font-black uppercase tracking-widest text-platinum/20">Active Listings</div>
+              </div>
+              <div className="h-12 w-px bg-white/5 mx-4" />
             </div>
-            <div className="h-12 w-px bg-white/5 mx-4" />
-            <Button variant="platinum" className="h-14 px-8 rounded-none font-black uppercase tracking-widest group">
-              Post Your Listing
-              <LayoutGrid size={16} className="ml-3 group-hover:rotate-90 transition-transform duration-500" />
-            </Button>
+            <InventoryNavigator 
+              className="w-full sm:w-auto"
+              onSelect={(selection) => {
+                setFilters(prev => ({
+                  ...prev,
+                  search_make: selection.make,
+                  search_model: selection.model === 'All Models' ? undefined : selection.model,
+                  query: selection.trim === 'All Trims' ? undefined : selection.trim,
+                }))
+              }}
+            />
           </div>
         </div>
+
+
 
         <div className="flex flex-col lg:flex-row gap-12">
           {/* Desktop Sidebar Filters */}
           <aside className="hidden lg:block w-80 space-y-8 animate-fade-up [animation-delay:200ms]">
-            <SearchFilters 
+            <SearchFiltersComponent 
               filters={filters} 
               onFilterChange={setFilters} 
-              onApply={() => fetchVehicles(filters)} 
+              onApply={() => fetchVehicles(filters, 0)} 
             />
           </aside>
 
@@ -229,10 +294,10 @@ export default function ListingsPage() {
                       </SheetTitle>
                     </SheetHeader>
                     <div className="p-6">
-                      <SearchFilters 
+                      <SearchFiltersComponent 
                         filters={filters} 
                         onFilterChange={setFilters} 
-                        onApply={() => fetchVehicles(filters)} 
+                        onApply={() => {}} 
                       />
                     </div>
                   </SheetContent>
@@ -274,6 +339,9 @@ export default function ListingsPage() {
               </div>
             )}
 
+            {/* Premium Carousel */}
+            {premiumVehicles.length > 0 && <PremiumListingsCarousel vehicles={premiumVehicles} />}
+
             {/* Vehicle Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
               {loading ? (
@@ -303,12 +371,22 @@ export default function ListingsPage() {
             </div>
             
             {/* Pagination / Footer Info */}
-            {!loading && vehicles.length > 0 && (
+            {!loading && vehicles.length > 0 && hasMore && (
               <div className="flex flex-col items-center gap-6 py-12 border-t border-white/5">
-                <div className="text-[10px] font-black uppercase tracking-[0.4em] text-platinum/20">End of Current Array</div>
-                <Button variant="outline" className="h-14 px-12 border-white/10 glass-panel rounded-none font-black uppercase tracking-widest italic hover:bg-white hover:text-black transition-all duration-500">
-                  Load More Inventory
+                <Button 
+                  onClick={handleLoadMore}
+                  disabled={isLoadingMore}
+                  variant="outline" 
+                  className="h-12 px-8 border-white/20 bg-transparent hover:bg-white hover:text-black rounded-none uppercase tracking-widest text-xs font-bold transition-all disabled:opacity-50"
+                >
+                  {isLoadingMore ? "Loading..." : "Load More Listings"}
                 </Button>
+              </div>
+            )}
+            
+            {!loading && vehicles.length > 0 && !hasMore && (
+               <div className="flex flex-col items-center gap-6 py-12 border-t border-white/5">
+                <div className="text-[10px] font-black uppercase tracking-[0.4em] text-platinum/20">End of Results</div>
               </div>
             )}
           </main>

@@ -429,7 +429,7 @@ export async function getLatestArticles(
   })
 
   if (error) {
-    console.error('❌ Error getting latest articles:', error)
+    console.error('❌ Error getting latest articles:', error.message || error)
     return []
   }
 

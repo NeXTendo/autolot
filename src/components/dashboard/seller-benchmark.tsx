@@ -39,10 +39,14 @@ function BenchmarkItem({ label, userValue, marketValue, percentage, icon: Icon, 
       <div className="flex items-center gap-4">
         <div className="flex-1">
           <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/10">
-            <div 
-              className="h-full bg-white rounded-full transition-all duration-1000" 
-              style={{ width: `${Math.min(100, Math.max(10, 100 + percentage))}%` }}
-            ></div>
+            <svg className="w-full h-full">
+              <rect 
+                className="fill-white transition-all duration-1000" 
+                width={`${Math.min(100, Math.max(10, 100 + percentage))}%`}
+                height="100%"
+                rx="4"
+              />
+            </svg>
           </div>
         </div>
         <div className="text-sm font-black w-14 text-right text-white">{userValue}</div>
@@ -56,17 +60,20 @@ function BenchmarkItem({ label, userValue, marketValue, percentage, icon: Icon, 
   )
 }
 
-export function SellerBenchmark() {
+interface SellerBenchmarkProps {
+  sellerId: string
+}
+
+export function SellerBenchmark({ sellerId }: SellerBenchmarkProps) {
   const [stats, setStats] = useState<SellerAnalytics | null>(null)
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
   const fetchStats = useCallback(async (isMounted = { current: true }) => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user || !isMounted.current) return
+    if (!isMounted.current) return
 
     const { data, error } = await supabase.rpc('get_seller_analytics_v2', {
-      p_seller_id: user.id
+      p_seller_id: sellerId
     })
 
     if (!isMounted.current) return
@@ -75,7 +82,7 @@ export function SellerBenchmark() {
       setStats(data)
     }
     setLoading(false)
-  }, [supabase])
+  }, [supabase, sellerId])
 
   useEffect(() => {
     const isMounted = { current: true }

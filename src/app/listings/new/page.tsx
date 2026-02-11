@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -557,7 +558,13 @@ export default function ListingWizard() {
                 <div className="grid grid-cols-3 md:grid-cols-5 gap-4 mt-4">
                   {images.map((file, i) => (
                     <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-secondary">
-                      <img src={URL.createObjectURL(file)} className="w-full h-full object-cover" alt={`Upload ${i + 1}`} />
+                      <Image 
+                        src={URL.createObjectURL(file)} 
+                        className="w-full h-full object-cover" 
+                        alt={`Upload ${i + 1}`}
+                        fill
+                        unoptimized
+                      />
                       <button
                         onClick={() => removeImage(i)}
                         className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90"

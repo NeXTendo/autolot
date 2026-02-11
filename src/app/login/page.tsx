@@ -83,12 +83,29 @@ export default function LoginPage() {
       }
 
       if (data.user) {
+        // Fetch user profile to check role
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .single()
+
         toast({
           variant: "success",
           title: "Welcome Back!",
           description: "You have successfully signed in.",
         })
-        router.push('/dashboard')
+
+        if (profile?.role === 'dealer' || profile?.role === 'dealer_staff') {
+          router.push('/dealer/dashboard')
+        } else if (profile?.role === 'inspector') {
+          router.push('/inspector/dashboard')
+        } else if (profile?.role === 'admin') {
+          router.push('/admin')
+        } else {
+          router.push('/profile')
+        }
+        
         router.refresh()
       }
     } catch {

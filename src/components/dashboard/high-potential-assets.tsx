@@ -15,19 +15,20 @@ import {
 import Link from "next/link"
 import Image from "next/image"
 
-export function HighPotentialAssets() {
+interface HighPotentialAssetsProps {
+  sellerId: string
+}
+
+export function HighPotentialAssets({ sellerId }: HighPotentialAssetsProps) {
   const [assets, setAssets] = useState<HighPotentialAsset[]>([])
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
   const fetchAssets = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
-    const data = await getHighPotentialAssets(supabase, user.id)
+    const data = await getHighPotentialAssets(supabase, sellerId)
     setAssets(data)
     setLoading(false)
-  }, [supabase])
+  }, [supabase, sellerId])
 
   useEffect(() => {
     // Refresh when views or messages change
@@ -73,7 +74,7 @@ export function HighPotentialAssets() {
         {assets.map((asset) => (
           <Card key={asset.id} className="group border-white/5 bg-white/2 hover:bg-white/5 transition-all duration-500 rounded-none overflow-hidden relative">
             <CardContent className="p-4 flex gap-4">
-              <div className="relative w-24 h-16 bg-black flex-shrink-0">
+              <div className="relative w-24 h-16 bg-black shrink-0">
                 {asset.image ? (
                   <Image 
                     src={asset.image} 

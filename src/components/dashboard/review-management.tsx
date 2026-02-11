@@ -15,20 +15,21 @@ interface Review {
   } | null
 }
 
-export function ReviewManagement() {
+interface ReviewManagementProps {
+  sellerId: string
+}
+
+export function ReviewManagement({ sellerId }: ReviewManagementProps) {
   const [isOpen, setIsOpen] = useState(true)
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
   const fetchReviews = useCallback(async (isMounted = { current: true }) => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
     const { data, error } = await supabase
       .from('reviews')
       .select('*, reviewer:profiles!reviews_reviewer_id_fkey(name)')
-      .eq('seller_id', user.id)
+      .eq('seller_id', sellerId)
       .order('created_at', { ascending: false })
 
     if (isMounted.current && !error && data) {
@@ -37,11 +38,13 @@ export function ReviewManagement() {
     if (isMounted.current) {
       setLoading(false)
     }
-  }, [supabase])
+  }, [supabase, sellerId])
 
   useEffect(() => {
     const isMounted = { current: true }
-    fetchReviews(isMounted)
+    void (async () => {
+      await fetchReviews(isMounted)
+    })()
 
     const channel = supabase
       .channel('review-updates')

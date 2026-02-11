@@ -1,259 +1,225 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { requireDealer } from '@/lib/auth/roles'
-import { Users, TrendingUp, Car, BarChart3, Eye, MessageSquare } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { VehicleCard } from '@/components/vehicle-card'
+import { 
+  Plus, 
+  LayoutDashboard, 
+  Car, 
+  Users, 
+  BarChart3,
+  Settings,
+  ShieldCheck
+} from 'lucide-react'
+import { AnalyticsSummary } from '@/components/dashboard/analytics-summary'
+import { SalesChart } from '@/components/dashboard/sales-chart'
+import { ReviewManagement } from '@/components/dashboard/review-management'
+import { SellerBenchmark } from '@/components/dashboard/seller-benchmark'
+import { StrategicReach } from '@/components/dashboard/strategic-reach'
+import { LeadManagement } from '@/components/dashboard/lead-management'
+import { InventoryGrid } from '@/components/dashboard/inventory-grid'
+import { HighPotentialAssets } from '@/components/dashboard/high-potential-assets'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
+
+interface StaffMember {
+  staff: {
+    id: string
+    role: string
+  }
+  profile: {
+    name: string
+  }
+}
 
 export default async function DealerDashboardPage() {
-  // Require dealer role
-  let profile
-  try {
-    profile = await requireDealer()
-  } catch {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
     redirect('/login')
   }
 
-  const supabase = await createClient()
+  // Get profile to check role
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single()
 
-  // Get dealer profile with stats
-  const { data: dealerData } = await supabase.rpc('get_dealer_profile', {
-    p_dealer_id: profile.id
-  })
+  // Allow dealer or dealer_staff
+  if (!profile || (profile.role !== 'dealer' && profile.role !== 'dealer_staff')) {
+    redirect('/profile')
+  }
 
-  // Get dealer listings
-  const { data: listings } = await supabase.rpc('get_dealer_listings', {
-    p_dealer_id: profile.id,
-    p_status: 'active'
-  })
+  // Determine the dealer ID (self or parent)
+  const dealerId = profile.role === 'dealer' ? profile.id : profile.parent_dealer_id
+  
+  if (!dealerId) {
+    redirect('/profile')
+  }
 
-  // Get dealer staff
+  // Get dealer staff for the Team tab
   const { data: staff } = await supabase.rpc('get_dealer_staff', {
-    p_dealer_id: profile.id
+    p_dealer_id: dealerId
   })
 
-  // Get recent leads
-  const { data: leads } = await supabase
-    .from('messages')
-    .select('*, vehicle:vehicles(make, model, year), sender:profiles!messages_user_id_fkey(name)')
-    .eq('seller_id', profile.id)
-    .order('created_at', { ascending: false })
-    .limit(5)
-
-  const stats = dealerData?.stats || { total_listings: 0, total_sold: 0, staff_count: 0 }
-
-  // Calculate analytics from listings
-  const totalViews = listings?.reduce((sum: number, v: any) => sum + (v.view_count || 0), 0) || 0
+  // Determine display name for the header
+  // If dealer_staff, we might want to show their name, but usually the dashboard header shows the User's name.
+  // The 'Authenticated Agent' section uses profile.name, which is correct (the specific user).
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] py-12">
-      <div className="container">
-        {/* Header */}
-        <div className="mb-12">
-          <h1 className="text-4xl font-black uppercase tracking-tighter text-white mb-2">
-            Dealer Command Center
+    <div className="container py-12 md:py-20 min-h-screen max-w-7xl mx-auto px-4 text-white">
+      {/* Premium Header Container */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-16 gap-8 pb-8 border-b border-white/5">
+        <div className="animate-fade-down">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-px w-8 bg-platinum/20" />
+            <span className="text-[10px] font-black uppercase tracking-[0.5em] text-platinum/40">Dealer Command</span>
+          </div>
+          <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase mb-2">
+            Control <span className="text-platinum">Center</span>
           </h1>
-          <p className="text-white/60">Manage your inventory, team, and leads</p>
+          <p className="text-platinum/40 font-medium">
+            Authenticated Agent: <span className="text-platinum font-black uppercase tracking-widest text-[11px] ml-1">@{profile?.name?.toLowerCase().replace(/\s+/g, '_') || 'dealer'}</span>
+            {profile?.is_verified && (
+              <span className="ml-3 inline-flex items-center gap-1.5 px-2 py-0.5 bg-blue-500/10 border border-blue-500/20 text-[9px] font-black uppercase tracking-tighter text-blue-400">
+                <ShieldCheck size={10} /> Verified
+              </span>
+            )}
+          </p>
         </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-platinum/10 to-platinum/5 border border-platinum/20">
-            <div className="flex items-center justify-between mb-4">
-              <Car className="text-platinum" size={24} />
-              <TrendingUp className="text-green-400" size={16} />
-            </div>
-            <div className="text-3xl font-black text-white mb-1">{stats.total_listings}</div>
-            <div className="text-xs font-black uppercase tracking-widest text-white/40">Active Listings</div>
-          </div>
-
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-green-500/10 to-green-500/5 border border-green-500/20">
-            <div className="flex items-center justify-between mb-4">
-              <BarChart3 className="text-green-400" size={24} />
-              <TrendingUp className="text-green-400" size={16} />
-            </div>
-            <div className="text-3xl font-black text-white mb-1">{stats.total_sold}</div>
-            <div className="text-xs font-black uppercase tracking-widest text-white/40">Total Sold</div>
-          </div>
-
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20">
-            <div className="flex items-center justify-between mb-4">
-              <Eye className="text-blue-400" size={24} />
-            </div>
-            <div className="text-3xl font-black text-white mb-1">{totalViews.toLocaleString()}</div>
-            <div className="text-xs font-black uppercase tracking-widest text-white/40">Total Views</div>
-          </div>
-
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-purple-500/10 to-purple-500/5 border border-purple-500/20">
-            <div className="flex items-center justify-between mb-4">
-              <Users className="text-purple-400" size={24} />
-            </div>
-            <div className="text-3xl font-black text-white mb-1">{stats.staff_count}</div>
-            <div className="text-xs font-black uppercase tracking-widest text-white/40">Team Members</div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Active Listings */}
-            <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-black uppercase tracking-widest text-white">
-                  Active Inventory
-                </h2>
-                <Button asChild variant="outline" className="border-platinum/20 text-platinum hover:bg-platinum/10">
-                  <Link href="/listings/new">Add Listing</Link>
-                </Button>
-              </div>
-
-              {listings && listings.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {listings.slice(0, 4).map((vehicle: any) => (
-                    <VehicleCard key={vehicle.id} vehicle={vehicle} />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12 border-2 border-dashed border-white/10 rounded-xl">
-                  <Car className="w-12 h-12 mx-auto mb-4 text-white/20" />
-                  <p className="text-white/40 text-sm">No active listings</p>
-                  <Button asChild className="mt-4" variant="outline">
-                    <Link href="/listings/new">Create Your First Listing</Link>
-                  </Button>
-                </div>
-              )}
-
-              {listings && listings.length > 4 && (
-                <Button asChild variant="ghost" className="w-full mt-4 text-platinum">
-                  <Link href={`/dealer/${profile.id}`}>View All {listings.length} Listings</Link>
-                </Button>
-              )}
-            </div>
-
-            {/* Recent Leads */}
-            <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-black uppercase tracking-widest text-white flex items-center gap-2">
-                  <MessageSquare size={20} />
-                  Recent Leads
-                </h2>
-                <Button asChild variant="ghost" className="text-platinum text-xs">
-                  <Link href="/admin">View All</Link>
-                </Button>
-              </div>
-
-              {leads && leads.length > 0 ? (
-                <div className="space-y-3">
-                  {leads.map((lead: any) => (
-                    <div key={lead.id} className="p-4 rounded-xl bg-white/5 border border-white/10">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <div className="text-sm font-bold text-white">{lead.sender?.name || 'Anonymous'}</div>
-                          <div className="text-xs text-white/40">
-                            {lead.vehicle?.year} {lead.vehicle?.make} {lead.vehicle?.model}
-                          </div>
-                        </div>
-                        <div className="text-xs text-white/40">
-                          {new Date(lead.created_at).toLocaleDateString()}
-                        </div>
-                      </div>
-                      <p className="text-sm text-white/70 line-clamp-2">{lead.message}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-white/40 text-sm">
-                  No leads yet
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Quick Actions */}
-            <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
-              <h3 className="text-sm font-black uppercase tracking-widest text-white mb-4">
-                Quick Actions
-              </h3>
-              <div className="space-y-2">
-                <Button asChild className="w-full justify-start" variant="outline">
-                  <Link href="/listings/new">
-                    <Car size={16} />
-                    Add New Listing
-                  </Link>
-                </Button>
-                <Button asChild className="w-full justify-start" variant="outline">
-                  <Link href="/dealer/staff">
-                    <Users size={16} />
-                    Manage Team
-                  </Link>
-                </Button>
-                <Button asChild className="w-full justify-start" variant="outline">
-                  <Link href="/admin">
-                    <MessageSquare size={16} />
-                    View All Leads
-                  </Link>
-                </Button>
-                <Button asChild className="w-full justify-start" variant="outline">
-                  <Link href={`/dealer/${profile.id}`}>
-                    <Eye size={16} />
-                    View Public Profile
-                  </Link>
-                </Button>
-              </div>
-            </div>
-
-            {/* Team Overview */}
-            <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-black uppercase tracking-widest text-white">
-                  Team
-                </h3>
-                <Button asChild variant="ghost" size="sm" className="text-platinum text-xs">
-                  <Link href="/dealer/staff">Manage</Link>
-                </Button>
-              </div>
-
-              {staff && staff.length > 0 ? (
-                <div className="space-y-2">
-                  {staff.slice(0, 5).map((member: any) => (
-                    <div key={member.staff.id} className="flex items-center gap-3 p-2 rounded-lg bg-white/5">
-                      <div className="w-8 h-8 rounded-full bg-platinum/10 flex items-center justify-center text-xs font-bold text-platinum">
-                        {member.profile.name?.[0]}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-bold text-white truncate">{member.profile.name}</div>
-                        <div className="text-xs text-white/40 capitalize">{member.staff.role.replace('_', ' ')}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-4 text-white/40 text-sm">
-                  No team members yet
-                </div>
-              )}
-            </div>
-
-            {/* Performance Tip */}
-            <div className="p-6 rounded-2xl bg-gradient-to-br from-platinum/10 to-platinum/5 border border-platinum/20">
-              <div className="flex items-start gap-3">
-                <TrendingUp className="text-platinum mt-1" size={20} />
-                <div>
-                  <h3 className="text-sm font-black uppercase tracking-widest text-white mb-2">
-                    Pro Tip
-                  </h3>
-                  <p className="text-xs text-white/70 leading-relaxed">
-                    Listings with professional photos get 3x more views. Consider adding inspection reports to build buyer trust.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div className="flex flex-wrap gap-3 animate-fade-down">
+          <Button asChild variant="platinum" className="h-14 px-8 rounded-none font-black uppercase tracking-widest group">
+            <Link href="/listings/new">
+              <Plus size={18} className="mr-2 group-hover:rotate-90 transition-transform duration-300" />
+              Initialize Listing
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="h-14 px-8 rounded-none border-white/5 bg-white/5 hover:bg-white hover:text-black transition-all font-black uppercase tracking-widest">
+            <Link href="/profile">
+              <Settings size={18} className="mr-2" /> System Config
+            </Link>
+          </Button>
         </div>
       </div>
+
+      <Tabs defaultValue="overview" className="space-y-12">
+        <div className="flex items-center justify-between gap-4 overflow-x-auto pb-2 scrollbar-hide md:overflow-visible">
+          <TabsList className="bg-white/5 border border-white/5 p-1 rounded-none h-14 w-full md:w-auto">
+            <TabsTrigger value="overview" className="data-[state=active]:bg-platinum data-[state=active]:text-black rounded-none px-8 font-black uppercase tracking-widest text-[10px] h-full transition-all">
+              <LayoutDashboard size={14} className="mr-2" /> Overview
+            </TabsTrigger>
+            <TabsTrigger value="inventory" className="data-[state=active]:bg-platinum data-[state=active]:text-black rounded-none px-8 font-black uppercase tracking-widest text-[10px] h-full transition-all">
+              <Car size={14} className="mr-2" /> Marketplace
+            </TabsTrigger>
+            <TabsTrigger value="leads" className="data-[state=active]:bg-platinum data-[state=active]:text-black rounded-none px-8 font-black uppercase tracking-widest text-[10px] h-full transition-all relative">
+              <Users size={14} className="mr-2" /> Buyers
+            </TabsTrigger>
+            <TabsTrigger value="performance" className="data-[state=active]:bg-platinum data-[state=active]:text-black rounded-none px-8 font-black uppercase tracking-widest text-[10px] h-full transition-all">
+              <BarChart3 size={14} className="mr-2" /> Performance
+            </TabsTrigger>
+            <TabsTrigger value="team" className="data-[state=active]:bg-platinum data-[state=active]:text-black rounded-none px-8 font-black uppercase tracking-widest text-[10px] h-full transition-all">
+              <Users size={14} className="mr-2" /> Team
+            </TabsTrigger>
+          </TabsList>
+        </div>
+
+        <TabsContent value="overview" className="m-0 space-y-12">
+          <div className="animate-fade-up">
+            <AnalyticsSummary sellerId={dealerId} />
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-12">
+            <div className="lg:col-span-2 space-y-8 animate-fade-up [animation-delay:200ms]">
+              <SalesChart sellerId={dealerId} />
+            </div>
+            <div className="space-y-8 animate-fade-up [animation-delay:400ms]">
+               <StrategicReach sellerId={dealerId} />
+               <HighPotentialAssets sellerId={dealerId} />
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="inventory" className="m-0 animate-fade-up">
+          <div className="flex flex-col gap-8 mb-12">
+             <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold uppercase tracking-tight">Active Assets</h3>
+                  <p className="text-platinum/40 text-[10px] font-black uppercase tracking-widest">Global Marketplace Inventory</p>
+                </div>
+                <div className="flex gap-2">
+                   <Button variant="outline" size="sm" className="rounded-none border-white/5 text-[9px] font-black uppercase tracking-widest">All Status</Button>
+                   <Button variant="outline" size="sm" className="rounded-none border-white/5 text-[9px] font-black uppercase tracking-widest">Sort: Latest</Button>
+                </div>
+             </div>
+             <InventoryGrid sellerId={dealerId} />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="leads" className="m-0 animate-fade-up">
+          <div className="flex flex-col gap-8 mb-12">
+            <div>
+              <h3 className="text-xl font-bold uppercase tracking-tight">Acquisition Inbox</h3>
+              <p className="text-platinum/40 text-[10px] font-black uppercase tracking-widest">Direct Buyer Inquiries & Leads</p>
+            </div>
+            <LeadManagement sellerId={dealerId} />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="performance" className="m-0 animate-fade-up">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+             <div className="space-y-8">
+                <div>
+                  <h3 className="text-xl font-bold uppercase tracking-tight">Market Benchmarking</h3>
+                  <p className="text-platinum/40 text-[10px] font-black uppercase tracking-widest">Comparing performance vs market average</p>
+                </div>
+                <SellerBenchmark sellerId={dealerId} />
+             </div>
+             <div className="space-y-8">
+                <div>
+                  <h3 className="text-xl font-bold uppercase tracking-tight">Reputation & Reviews</h3>
+                  <p className="text-platinum/40 text-[10px] font-black uppercase tracking-widest">Customer satisfaction and trust metrics</p>
+                </div>
+                <ReviewManagement sellerId={dealerId} />
+             </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="team" className="m-0 animate-fade-up">
+           <div className="flex flex-col gap-8 mb-12">
+             <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold uppercase tracking-tight">Team Management</h3>
+                  <p className="text-platinum/40 text-[10px] font-black uppercase tracking-widest">Staff members and permissions</p>
+                </div>
+                <Button asChild variant="platinum" className="h-10 px-6 rounded-none font-black uppercase tracking-widest text-[10px]">
+                   <Link href="/dealer/staff">
+                     Manage Staff
+                   </Link>
+                </Button>
+             </div>
+
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {staff && staff.length > 0 ? (staff as unknown as StaffMember[]).map((member) => (
+                  <div key={member.staff.id} className="p-6 rounded-none bg-white/5 border border-white/10 flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-platinum/10 flex items-center justify-center text-sm font-black text-platinum">
+                      {member.profile.name?.[0]}
+                    </div>
+                    <div>
+                      <div className="font-bold text-white">{member.profile.name}</div>
+                      <div className="text-xs text-platinum/40 font-black uppercase tracking-widest">{member.staff.role.replace('_', ' ')}</div>
+                    </div>
+                  </div>
+                )) : (
+                  <div className="col-span-3 text-center py-12 border-2 border-dashed border-white/5 bg-white/5">
+                    <p className="text-platinum/40 text-sm italic">No team members yet</p>
+                  </div>
+                )}
+             </div>
+           </div>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

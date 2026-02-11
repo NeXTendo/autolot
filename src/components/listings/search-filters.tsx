@@ -51,7 +51,7 @@ export function SearchFilters({ filters, onFilterChange, onApply }: SearchFilter
                 <SelectTrigger className="bg-black/20 border-white/5 h-10 font-mono text-[10px] focus:border-platinum/50 transition-all uppercase tracking-widest">
                   <SelectValue placeholder="Sort By" />
                 </SelectTrigger>
-                <SelectContent className="bg-black border-white/10 text-white">
+                <SelectContent className="bg-black border-white/10 text-white z-100000">
                   <SelectItem value="created_at">Date Listed</SelectItem>
                   <SelectItem value="price">Price</SelectItem>
                   <SelectItem value="year">Model Year</SelectItem>
@@ -62,7 +62,7 @@ export function SearchFilters({ filters, onFilterChange, onApply }: SearchFilter
                 <SelectTrigger className="bg-black/20 border-white/5 h-10 font-mono text-[10px] focus:border-platinum/50 transition-all uppercase tracking-widest">
                   <SelectValue placeholder="Order" />
                 </SelectTrigger>
-                <SelectContent className="bg-black border-white/10 text-white">
+                <SelectContent className="bg-black border-white/10 text-white z-100000">
                   <SelectItem value="desc">Descending</SelectItem>
                   <SelectItem value="asc">Ascending</SelectItem>
                 </SelectContent>
@@ -120,7 +120,7 @@ export function SearchFilters({ filters, onFilterChange, onApply }: SearchFilter
                 <SelectTrigger className="bg-black/20 border-white/5 h-10 font-mono text-xs focus:border-platinum/50 transition-all">
                   <SelectValue placeholder="All Styles" />
                 </SelectTrigger>
-                <SelectContent className="bg-black border-white/10 text-white">
+                <SelectContent className="bg-black border-white/10 text-white z-100000">
                   <SelectItem value="all">All Styles</SelectItem>
                   <SelectItem value="Sedan">Sedan</SelectItem>
                   <SelectItem value="Coupe">Coupe</SelectItem>
@@ -138,7 +138,7 @@ export function SearchFilters({ filters, onFilterChange, onApply }: SearchFilter
                 <SelectTrigger className="bg-black/20 border-white/5 h-10 font-mono text-xs focus:border-platinum/50 transition-all">
                   <SelectValue placeholder="All Fuel Types" />
                 </SelectTrigger>
-                <SelectContent className="bg-black border-white/10 text-white">
+                <SelectContent className="bg-black border-white/10 text-white z-100000">
                   <SelectItem value="all">All Fuel Types</SelectItem>
                   <SelectItem value="Gasoline">Gasoline</SelectItem>
                   <SelectItem value="Diesel">Diesel</SelectItem>
@@ -155,7 +155,7 @@ export function SearchFilters({ filters, onFilterChange, onApply }: SearchFilter
                 <SelectTrigger className="bg-black/20 border-white/5 h-10 font-mono text-xs focus:border-platinum/50 transition-all">
                   <SelectValue placeholder="Any Transmission" />
                 </SelectTrigger>
-                <SelectContent className="bg-black border-white/10 text-white">
+                <SelectContent className="bg-black border-white/10 text-white z-100000">
                   <SelectItem value="all">Any Transmission</SelectItem>
                   <SelectItem value="Automatic">Automatic</SelectItem>
                   <SelectItem value="Manual">Manual</SelectItem>

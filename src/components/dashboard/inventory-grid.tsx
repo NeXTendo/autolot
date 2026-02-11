@@ -20,26 +20,27 @@ import {
 import Link from "next/link"
 import Image from "next/image"
 
-export function InventoryGrid() {
+interface InventoryGridProps {
+  sellerId: string
+}
+
+export function InventoryGrid({ sellerId }: InventoryGridProps) {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
   const fetchVehicles = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
     const { data } = await supabase
       .from('vehicles')
       .select('*, seller:profiles(name, is_verified)')
-      .eq('seller_id', user.id)
+      .eq('seller_id', sellerId)
       .order('created_at', { ascending: false })
 
     if (data) {
       setVehicles(data as any[])
     }
     setLoading(false)
-  }, [supabase])
+  }, [supabase, sellerId])
 
   useEffect(() => {
     // Real-time synchronization
@@ -130,13 +131,13 @@ export function InventoryGrid() {
             </div>
           </div>
           
-          <CardContent className="p-5 flex flex-col flex-grow">
+          <CardContent className="p-5 flex flex-col grow">
             <div className="flex justify-between items-start mb-4">
               <div className="min-w-0">
                 <h4 className="font-bold text-sm truncate pr-2">{car.year} {car.make}</h4>
                 <p className="text-sm font-black text-platinum tracking-tighter truncate">{car.model}</p>
               </div>
-              <div className="text-right flex-shrink-0">
+              <div className="text-right shrink-0">
                 <div className="text-xs font-black text-white"><PriceDisplay price={Number(car.price)} /></div>
                 <div className="text-[8px] text-platinum/30 font-black uppercase tracking-widest">Fixed Asset</div>
               </div>

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Users, ShieldCheck, BarChart3, Settings } from 'lucide-react'
+import { Users, ShieldCheck, BarChart3 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export default function AdminPage() {

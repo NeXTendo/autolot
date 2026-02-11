@@ -51,7 +51,7 @@ export function MobileNav({ user, userRole, signOut }: MobileNavProps) {
             </SheetTitle>
           </SheetHeader>
 
-          <div className="flex-1 flex flex-col p-6 space-y-2">
+          <div className="flex-1 flex flex-col p-6 space-y-2 overflow-y-auto">
             <MobileNavLink 
               href="/" 
               icon={Home} 
@@ -127,12 +127,7 @@ export function MobileNav({ user, userRole, signOut }: MobileNavProps) {
                 )}
 
                 {/* General Links */}
-                <MobileNavLink 
-                  href="/dashboard" 
-                  icon={LayoutDashboard} 
-                  label="Dashboard" 
-                  onClick={() => setOpen(false)} 
-                />
+
                 <MobileNavLink 
                   href="/listings/new" 
                   icon={Plus} 
@@ -214,7 +209,7 @@ interface NavBarProps {
 
 export function NavBar({ user, userRole, signOut }: NavBarProps) {
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         <Link href="/" className="flex items-center space-x-2">
           <span className="text-2xl font-bold tracking-tighter">
@@ -267,9 +262,7 @@ export function NavBar({ user, userRole, signOut }: NavBarProps) {
                 </Link>
               )}
 
-              <Link href="/dashboard" className="text-sm font-medium hover:text-[hsl(var(--platinum))] transition-colors">
-                Dashboard
-              </Link>
+
               <Link href="/profile" className="text-sm font-medium hover:text-[hsl(var(--platinum))] transition-colors">
                 Profile
               </Link>

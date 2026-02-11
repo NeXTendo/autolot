@@ -8,15 +8,17 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
+import { type Vehicle } from '@/lib/supabase/rpc'
+
 interface SavedListingWithVehicle {
   saved_at: string
   notes: string | null
-  vehicle: any
+  vehicle: Vehicle
 }
 
 export default function BuyerDashboardPage() {
   const [savedListings, setSavedListings] = useState<SavedListingWithVehicle[]>([])
-  const [alerts, setAlerts] = useState<any[]>([])
+  const [alerts, setAlerts] = useState<Vehicle[]>([])
   const [loading, setLoading] = useState(true)
   const router = useRouter()
   const supabase = createClient()
@@ -45,7 +47,10 @@ export default function BuyerDashboardPage() {
   }, [supabase, router])
 
   useEffect(() => {
-    loadDashboardData()
+    const init = async () => {
+      await loadDashboardData()
+    }
+    init()
   }, [loadDashboardData])
 
   if (loading) {
@@ -69,7 +74,7 @@ export default function BuyerDashboardPage() {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-red-500/10 to-red-500/5 border border-red-500/20">
+          <div className="p-6 rounded-2xl bg-linear-to-br from-red-500/10 to-red-500/5 border border-red-500/20">
             <div className="flex items-center justify-between mb-4">
               <Heart className="text-red-400" size={24} />
             </div>
@@ -77,7 +82,7 @@ export default function BuyerDashboardPage() {
             <div className="text-xs font-black uppercase tracking-widest text-white/40">Saved Vehicles</div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20">
+          <div className="p-6 rounded-2xl bg-linear-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20">
             <div className="flex items-center justify-between mb-4">
               <Bell className="text-blue-400" size={24} />
             </div>
@@ -85,7 +90,7 @@ export default function BuyerDashboardPage() {
             <div className="text-xs font-black uppercase tracking-widest text-white/40">New Matches</div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-platinum/10 to-platinum/5 border border-platinum/20">
+          <div className="p-6 rounded-2xl bg-linear-to-br from-platinum/10 to-platinum/5 border border-platinum/20">
             <div className="flex items-center justify-between mb-4">
               <TrendingUp className="text-platinum" size={24} />
             </div>
@@ -153,7 +158,7 @@ export default function BuyerDashboardPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {alerts.slice(0, 4).map((vehicle: any) => (
+                  {alerts.slice(0, 4).map((vehicle) => (
                     <VehicleCard key={vehicle.id} vehicle={vehicle} />
                   ))}
                 </div>
@@ -197,7 +202,7 @@ export default function BuyerDashboardPage() {
             </div>
 
             {/* Pro Tip */}
-            <div className="p-6 rounded-2xl bg-gradient-to-br from-platinum/10 to-platinum/5 border border-platinum/20">
+            <div className="p-6 rounded-2xl bg-linear-to-br from-platinum/10 to-platinum/5 border border-platinum/20">
               <div className="flex items-start gap-3">
                 <TrendingUp className="text-platinum mt-1" size={20} />
                 <div>

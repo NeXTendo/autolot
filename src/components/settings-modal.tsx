@@ -111,7 +111,7 @@ export function SettingsModal() {
           <SettingsIcon className="h-5 w-5" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto z-100000">
         <DialogHeader>
           <DialogTitle className="text-2xl">Settings</DialogTitle>
           <DialogDescription>
@@ -133,7 +133,7 @@ export function SettingsModal() {
                 <SelectTrigger id="currency">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-100001">
                   {getSupportedCurrencies().map((curr) => (
                     <SelectItem key={curr} value={curr}>
                       {curr} - {getCurrencyName(curr)}
@@ -155,7 +155,7 @@ export function SettingsModal() {
                 <SelectTrigger id="theme">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-100001">
                   <SelectItem value="dark">Dark</SelectItem>
                   <SelectItem value="light">Light</SelectItem>
                   <SelectItem value="auto">Auto (System)</SelectItem>
@@ -172,7 +172,7 @@ export function SettingsModal() {
                 <SelectTrigger id="measurement">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-100001">
                   <SelectItem value="km">Kilometers (km)</SelectItem>
                   <SelectItem value="miles">Miles (mi)</SelectItem>
                 </SelectContent>
@@ -188,7 +188,7 @@ export function SettingsModal() {
                 <SelectTrigger id="language">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-100001">
                   <SelectItem value="en">English</SelectItem>
                   <SelectItem value="es">Español</SelectItem>
                   <SelectItem value="fr">Français</SelectItem>

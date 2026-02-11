@@ -16,8 +16,17 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
+// Use specific interface for inspector dashboard to avoid full Vehicle type dependency and any types
+interface InspectorVehicle {
+  id: string
+  year: number
+  make: string
+  model: string
+  status: string
+}
+
 export default function InspectorDashboardPage() {
-  const [vehicles, setVehicles] = useState<any[]>([])
+  const [vehicles, setVehicles] = useState<InspectorVehicle[]>([])
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -66,14 +75,17 @@ export default function InspectorDashboardPage() {
       .limit(50)
 
     if (data) {
-      setVehicles(data)
+      setVehicles(data as unknown as InspectorVehicle[])
     }
 
     setLoading(false)
   }, [supabase, router])
 
   useEffect(() => {
-    loadVehicles()
+    const init = async () => {
+      await loadVehicles()
+    }
+    init()
   }, [loadVehicles])
 
   async function submitInspection() {

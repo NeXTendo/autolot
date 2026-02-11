@@ -19,17 +19,18 @@ interface ChartData {
   views: number
 }
 
-export function SalesChart() {
+interface SalesChartProps {
+  sellerId: string
+}
+
+export function SalesChart({ sellerId }: SalesChartProps) {
   const [data, setData] = useState<ChartData[]>([])
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
   const fetchChartData = useCallback(async (isMounted = { current: true }) => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
     const { data: chartData, error } = await supabase.rpc('get_seller_chart_data', {
-      p_seller_id: user.id
+      p_seller_id: sellerId
     })
 
     if (isMounted.current && !error && chartData) {
@@ -38,11 +39,13 @@ export function SalesChart() {
     if (isMounted.current) {
       setLoading(false)
     }
-  }, [supabase])
+  }, [supabase, sellerId])
 
   useEffect(() => {
     const isMounted = { current: true }
-    fetchChartData(isMounted)
+    void (async () => {
+      await fetchChartData(isMounted)
+    })()
 
     const channel = supabase
       .channel('chart-updates')

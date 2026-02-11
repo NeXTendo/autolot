@@ -86,7 +86,11 @@ export default function DealerStaffPage() {
   }, [supabase, router])
 
   useEffect(() => {
-    loadStaff()
+    // Initial load
+    const init = async () => {
+      await loadStaff()
+    }
+    init()
   }, [loadStaff])
 
   async function addStaff() {
@@ -256,7 +260,7 @@ export default function DealerStaffPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-platinum/10 to-platinum/5 border border-platinum/20">
+          <div className="p-6 rounded-2xl bg-linear-to-br from-platinum/10 to-platinum/5 border border-platinum/20">
             <div className="flex items-center justify-between mb-4">
               <Users className="text-platinum" size={24} />
             </div>
@@ -264,7 +268,7 @@ export default function DealerStaffPage() {
             <div className="text-xs font-black uppercase tracking-widest text-white/40">Total Staff</div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-green-500/10 to-green-500/5 border border-green-500/20">
+          <div className="p-6 rounded-2xl bg-linear-to-br from-green-500/10 to-green-500/5 border border-green-500/20">
             <div className="flex items-center justify-between mb-4">
               <CheckCircle2 className="text-green-400" size={24} />
             </div>
@@ -274,7 +278,7 @@ export default function DealerStaffPage() {
             <div className="text-xs font-black uppercase tracking-widest text-white/40">Active</div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20">
+          <div className="p-6 rounded-2xl bg-linear-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20">
             <div className="flex items-center justify-between mb-4">
               <Mail className="text-blue-400" size={24} />
             </div>

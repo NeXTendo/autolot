@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
-import { Calendar, MapPin, Fuel, Box, Gauge, ChevronLeft, ChevronRight } from "lucide-react"
+import { Calendar, Fuel, Box, Gauge, ChevronLeft, ChevronRight } from "lucide-react"
 import { PriceDisplay } from "@/components/price-display"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -108,12 +108,12 @@ export function VehicleCard({ vehicle }: VehicleCardProps) {
         {/* Price Tag */}
         <div className="absolute top-4 right-4 z-10">
           <div className={cn(
-            "px-3 py-1.5 rounded-none backdrop-blur-md border shadow-xl transition-all duration-500",
+            "px-2 py-1 rounded-none backdrop-blur-md border shadow-xl transition-all duration-500",
             vehicle.is_premium 
-              ? "bg-platinum text-black border-white/20 scale-110" 
+              ? "bg-black/90 text-white border-platinum/50" 
               : "bg-background/80 text-white border-white/10"
           )}>
-            <PriceDisplay price={Number(vehicle.price)} className={cn("text-xs font-black tracking-tight", vehicle.is_premium && "text-black")} />
+            <PriceDisplay price={Number(vehicle.price)} className={cn("text-[10px] font-black tracking-tight", vehicle.is_premium && "text-platinum")} />
           </div>
         </div>
       </div>

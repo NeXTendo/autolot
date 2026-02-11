@@ -105,7 +105,7 @@ export function ProfileForm({ initialProfile }: ProfileFormProps) {
               )}
             </div>
             
-            <h2 className="text-xl font-bold mb-1 break-words">{profile.name || "Authorized Member"}</h2>
+            <h2 className="text-xl font-bold mb-1 wrap-break-word">{profile.name || "Authorized Member"}</h2>
             <p className="text-xs text-platinum-dim uppercase tracking-widest font-bold mb-6">Signature Collector</p>
             
             <div className="grid grid-cols-2 gap-4 pt-6 border-t border-border/40">

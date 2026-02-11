@@ -406,7 +406,6 @@ BEGIN
       )
       -- Preserve sorting in aggregation
       ORDER BY 
-        v_out.is_premium DESC,
         CASE WHEN p_sort_by = 'price' AND p_sort_order = 'asc' THEN v_out.price END ASC,
         CASE WHEN p_sort_by = 'price' AND p_sort_order = 'desc' THEN v_out.price END DESC,
         CASE WHEN p_sort_by = 'year' AND p_sort_order = 'asc' THEN v_out.year END ASC,
@@ -445,7 +444,6 @@ BEGIN
       AND (p_max_mileage IS NULL OR v.mileage <= p_max_mileage)
       AND (p_is_premium IS NULL OR v.is_premium = p_is_premium)
     ORDER BY
-      v.is_premium DESC,
       CASE WHEN p_sort_by = 'price' AND p_sort_order = 'asc' THEN price END ASC,
       CASE WHEN p_sort_by = 'price' AND p_sort_order = 'desc' THEN price END DESC,
       CASE WHEN p_sort_by = 'year' AND p_sort_order = 'asc' THEN year END ASC,

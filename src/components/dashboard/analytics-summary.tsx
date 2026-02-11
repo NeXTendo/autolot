@@ -56,17 +56,20 @@ function AnalyticsStat({ label, value, trend, icon: Icon, isCurrency }: Analytic
   )
 }
 
-export function AnalyticsSummary() {
+interface AnalyticsSummaryProps {
+  sellerId: string
+}
+
+export function AnalyticsSummary({ sellerId }: AnalyticsSummaryProps) {
   const [stats, setStats] = useState<SellerAnalytics | null>(null)
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
   const fetchStats = useCallback(async (isMounted = { current: true }) => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user || !isMounted.current) return
+    if (!isMounted.current) return
 
     const { data, error } = await supabase.rpc('get_seller_analytics_v2', {
-      p_seller_id: user.id
+      p_seller_id: sellerId
     })
 
     if (!isMounted.current) return
@@ -75,7 +78,7 @@ export function AnalyticsSummary() {
       setStats(data)
     }
     setLoading(false)
-  }, [supabase])
+  }, [supabase, sellerId])
 
   useEffect(() => {
     const isMounted = { current: true }

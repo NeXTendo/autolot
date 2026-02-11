@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -27,7 +28,7 @@ const FUEL_TYPES = ['Gasoline', 'Diesel', 'Electric', 'Hybrid', 'Plug-in Hybrid'
 const TRANSMISSIONS = ['Automatic', 'Manual', 'CVT', 'Semi-Automatic']
 const CONDITIONS = ['Excellent', 'Very Good', 'Good', 'Fair', 'Poor']
 
-const ACCIDENT_HISTORIES = ['None', 'Minor', 'Moderate', 'Major']
+
 
 export default function EditListingPage() {
   const { id } = useParams()
@@ -422,7 +423,7 @@ export default function EditListingPage() {
                   {/* Existing Images */}
                   {existingImages.map((url, i) => (
                     <div key={`exist-${i}`} className="relative aspect-square rounded-xl overflow-hidden group">
-                      <img src={url} className="w-full h-full object-cover" alt="Gallery" />
+                      <Image src={url} fill className="object-cover" alt="Gallery" />
                       <button 
                         onClick={() => removeExistingImage(url)}
                         className="absolute top-1 right-1 bg-destructive p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
@@ -435,7 +436,7 @@ export default function EditListingPage() {
                   {/* New Images */}
                   {newImages.map((file, i) => (
                     <div key={`new-${i}`} className="relative aspect-square rounded-xl overflow-hidden border-2 border-platinum border-dashed">
-                      <img src={URL.createObjectURL(file)} className="w-full h-full object-cover opacity-60" alt="New" />
+                      <Image src={URL.createObjectURL(file)} fill className="object-cover opacity-60" alt="New" unoptimized />
                       <button 
                         onClick={() => removeNewImage(i)}
                         className="absolute top-1 right-1 bg-destructive p-1 rounded-full"
@@ -535,8 +536,12 @@ export default function EditListingPage() {
       <Card className="animate-fade-up overflow-hidden">
         <div className="h-1 bg-platinum/10 w-full">
           <div 
-            className="h-full bg-platinum transition-all duration-500" 
-            style={{ width: `${(step / 4) * 100}%` }}
+            className={`h-full bg-platinum transition-all duration-500 ${
+              step === 1 ? 'w-1/4' : 
+              step === 2 ? 'w-2/4' : 
+              step === 3 ? 'w-3/4' : 
+              'w-full'
+            }`} 
           />
         </div>
         <CardContent className="p-8 md:p-12">

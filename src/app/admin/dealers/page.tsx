@@ -163,7 +163,7 @@ export default function AdminDealerVerificationPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 border border-yellow-500/20">
+          <div className="p-6 rounded-2xl bg-linear-to-br from-yellow-500/10 to-yellow-500/5 border border-yellow-500/20">
             <div className="flex items-center justify-between mb-4">
               <Building2 className="text-yellow-400" size={24} />
             </div>
@@ -171,7 +171,7 @@ export default function AdminDealerVerificationPage() {
             <div className="text-xs font-black uppercase tracking-widest text-white/40">Pending Review</div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-green-500/10 to-green-500/5 border border-green-500/20">
+          <div className="p-6 rounded-2xl bg-linear-to-br from-green-500/10 to-green-500/5 border border-green-500/20">
             <div className="flex items-center justify-between mb-4">
               <ShieldCheck className="text-green-400" size={24} />
             </div>
@@ -179,7 +179,7 @@ export default function AdminDealerVerificationPage() {
             <div className="text-xs font-black uppercase tracking-widest text-white/40">Verified</div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-platinum/10 to-platinum/5 border border-platinum/20">
+          <div className="p-6 rounded-2xl bg-linear-to-br from-platinum/10 to-platinum/5 border border-platinum/20">
             <div className="flex items-center justify-between mb-4">
               <UserCheck className="text-platinum" size={24} />
             </div>

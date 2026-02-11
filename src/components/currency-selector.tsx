@@ -53,7 +53,7 @@ export function CurrencySelector() {
           <Globe className="w-4 h-4 mr-2" />
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="z-100000">
           {getSupportedCurrencies().map((curr) => (
             <SelectItem key={curr} value={curr}>
               <div className="flex items-center justify-between w-full">
@@ -66,10 +66,10 @@ export function CurrencySelector() {
       </Select>
 
       <Dialog open={showDisclaimer} onOpenChange={setShowDisclaimer}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md z-100000">
           <DialogHeader>
             <DialogTitle>Currency Conversion Notice</DialogTitle>
-            <DialogDescription className="space-y-3 pt-4">
+            <div className="space-y-3 pt-4 text-sm text-muted-foreground">
               <p>
                 You are about to change your display currency to{' '}
                 <strong>{pendingCurrency && getCurrencyName(pendingCurrency)}</strong>.
@@ -83,7 +83,7 @@ export function CurrencySelector() {
                   All transactions are processed in the seller&apos;s preferred currency.
                 </p>
               </div>
-            </DialogDescription>
+            </div>
           </DialogHeader>
           <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button variant="outline" onClick={cancelCurrencyChange}>

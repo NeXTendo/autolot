@@ -13,6 +13,7 @@ import { RecentlyViewed } from '@/components/personalization/recently-viewed'
 import { VehicleFeatures } from '@/components/vehicle/vehicle-features'
 import { DealerBadge } from '@/components/dealer/dealer-badge'
 import { InspectionBadge } from '@/components/vehicle/inspection-badge'
+import { VehicleNarrative } from '@/components/vehicle/vehicle-narrative'
 import { SaveListingButton } from '@/components/vehicle/save-listing-button'
 
 export default async function VehiclePage({
@@ -81,17 +82,7 @@ export default async function VehiclePage({
             </div>
 
             {/* Description */}
-            <Card className="animate-fade-up">
-              <CardContent className="p-8">
-                <h4 className="font-bold mb-6 uppercase text-sm tracking-wider flex items-center gap-2">
-                  <span className="w-8 h-px bg-platinum/30"></span>
-                  Vehicle Narrative
-                </h4>
-                <p className="text-muted-foreground leading-loose text-lg whitespace-pre-line">
-                  {vehicle.description || "The owner hasn't provided a description for this vehicle yet. Please contact the concierge for full details and history."}
-                </p>
-              </CardContent>
-            </Card>
+            <VehicleNarrative description={vehicle.description} />
           </div>
 
           {/* Sidebar */}

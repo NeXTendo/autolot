@@ -69,7 +69,7 @@ BEGIN
     condition, body_type, fuel_type, transmission, drivetrain,
     exterior_color, interior_color, vin, images, description, features,
     title_status, accidents, contact_method, pricing_strategy, show_phone,
-    seller_id
+    is_premium, seller_id
   )
   VALUES (
     vehicle_data->>'make',
@@ -102,6 +102,7 @@ BEGIN
     COALESCE(vehicle_data->>'contact_method', 'In-built Messenger'),
     COALESCE(vehicle_data->>'pricing_strategy', 'Negotiable'),
     COALESCE((vehicle_data->>'show_phone')::boolean, false),
+    COALESCE((vehicle_data->>'is_premium')::boolean, false),
     user_id
   )
   RETURNING to_jsonb(vehicles.*) INTO new_vehicle;
@@ -164,6 +165,7 @@ BEGIN
     END,
     pricing_strategy = COALESCE(vehicle_data->>'pricing_strategy', pricing_strategy),
     status = COALESCE((vehicle_data->>'status')::listing_status, status),
+    is_premium = COALESCE((vehicle_data->>'is_premium')::boolean, is_premium),
     updated_at = NOW()
   WHERE id = vehicle_id
   RETURNING to_jsonb(vehicles.*) INTO updated_vehicle;
@@ -332,16 +334,30 @@ $$;
 -- ============================================================================
 
 -- Advanced vehicle search with filters
+-- Step 1: Drop function to allow parameter name changes
+DROP FUNCTION IF EXISTS public.search_vehicles(text,text,numeric,numeric,integer,integer,vehicle_condition,text,text,text,text,integer,integer,integer,integer);
+
+-- Step 2: Create function with prefixed parameters
 CREATE OR REPLACE FUNCTION public.search_vehicles(
-  search_make text DEFAULT NULL,
-  search_model text DEFAULT NULL,
-  min_price numeric DEFAULT NULL,
-  max_price numeric DEFAULT NULL,
-  min_year integer DEFAULT NULL,
-  max_year integer DEFAULT NULL,
-  search_condition vehicle_condition DEFAULT NULL,
-  page_limit integer DEFAULT 20,
-  page_offset integer DEFAULT 0
+  p_query text DEFAULT NULL,
+  p_search_make text DEFAULT NULL,
+  p_search_model text DEFAULT NULL,
+  p_min_price numeric DEFAULT NULL,
+  p_max_price numeric DEFAULT NULL,
+  p_min_year integer DEFAULT NULL,
+  p_max_year integer DEFAULT NULL,
+  p_search_condition vehicle_condition DEFAULT NULL,
+  p_body_type text DEFAULT NULL,
+  p_fuel_type text DEFAULT NULL,
+  p_transmission text DEFAULT NULL,
+  p_drivetrain text DEFAULT NULL,
+  p_min_mileage integer DEFAULT NULL,
+  p_max_mileage integer DEFAULT NULL,
+  p_is_premium boolean DEFAULT NULL,
+  p_sort_by text DEFAULT 'created_at',
+  p_sort_order text DEFAULT 'desc',
+  p_page_limit integer DEFAULT 20,
+  p_page_offset integer DEFAULT 0
 )
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -350,23 +366,57 @@ AS $$
 DECLARE
   result jsonb;
   total_count integer;
+  v_sort_col text;
 BEGIN
   -- Get total count first
   SELECT COUNT(*)
   INTO total_count
   FROM public.vehicles v
   WHERE v.status = 'active'
-    AND (search_make IS NULL OR v.make ILIKE '%' || search_make || '%')
-    AND (search_model IS NULL OR v.model ILIKE '%' || search_model || '%')
-    AND (min_price IS NULL OR v.price >= min_price)
-    AND (max_price IS NULL OR v.price <= max_price)
-    AND (min_year IS NULL OR v.year >= min_year)
-    AND (max_year IS NULL OR v.year <= max_year)
-    AND (search_condition IS NULL OR v.condition = search_condition);
+    AND (p_query IS NULL OR (
+      v.make ILIKE '%' || p_query || '%' OR 
+      v.model ILIKE '%' || p_query || '%' OR 
+      v.trim ILIKE '%' || p_query || '%' OR
+      (v.make || ' ' || v.model) ILIKE '%' || p_query || '%'
+    ))
+    AND (p_search_make IS NULL OR v.make ILIKE '%' || p_search_make || '%')
+    AND (p_search_model IS NULL OR v.model ILIKE '%' || p_search_model || '%')
+    AND (p_min_price IS NULL OR v.price >= p_min_price)
+    AND (p_max_price IS NULL OR v.price <= p_max_price)
+    AND (p_min_year IS NULL OR v.year >= p_min_year)
+    AND (p_max_year IS NULL OR v.year <= p_max_year)
+    AND (p_search_condition IS NULL OR v.condition = p_search_condition)
+    AND (p_body_type IS NULL OR v.body_type = p_body_type)
+    AND (p_fuel_type IS NULL OR v.fuel_type = p_fuel_type)
+    AND (p_transmission IS NULL OR v.transmission = p_transmission)
+    AND (p_drivetrain IS NULL OR v.drivetrain = p_drivetrain)
+    AND (p_min_mileage IS NULL OR v.mileage >= p_min_mileage)
+    AND (p_max_mileage IS NULL OR v.mileage <= p_max_mileage)
+    AND (p_is_premium IS NULL OR v.is_premium = p_is_premium);
 
-  -- Get paginated results
+  -- Get paginated results with dynamic sorting
+  -- We use a CTE to ensure the join with profiles doesn't break the sorting order
   SELECT jsonb_build_object(
-    'vehicles', COALESCE(jsonb_agg(to_jsonb(v.*)), '[]'::jsonb),
+    'vehicles', COALESCE(jsonb_agg(
+      to_jsonb(v_out.*) || jsonb_build_object(
+        'seller', jsonb_build_object(
+          'name', COALESCE(p.name, 'Global Seller'),
+          'is_verified', COALESCE(p.is_verified, false)
+        )
+      )
+      -- Preserve sorting in aggregation
+      ORDER BY 
+        v_out.is_premium DESC,
+        CASE WHEN p_sort_by = 'price' AND p_sort_order = 'asc' THEN v_out.price END ASC,
+        CASE WHEN p_sort_by = 'price' AND p_sort_order = 'desc' THEN v_out.price END DESC,
+        CASE WHEN p_sort_by = 'year' AND p_sort_order = 'asc' THEN v_out.year END ASC,
+        CASE WHEN p_sort_by = 'year' AND p_sort_order = 'desc' THEN v_out.year END DESC,
+        CASE WHEN p_sort_by = 'mileage' AND p_sort_order = 'asc' THEN v_out.mileage END ASC,
+        CASE WHEN p_sort_by = 'mileage' AND p_sort_order = 'desc' THEN v_out.mileage END DESC,
+        CASE WHEN p_sort_by = 'created_at' AND p_sort_order = 'asc' THEN v_out.created_at END ASC,
+        CASE WHEN p_sort_by = 'created_at' AND p_sort_order = 'desc' THEN v_out.created_at END DESC,
+        v_out.created_at DESC
+    ), '[]'::jsonb),
     'total', total_count
   )
   INTO result
@@ -374,18 +424,151 @@ BEGIN
     SELECT v.*
     FROM public.vehicles v
     WHERE v.status = 'active'
-      AND (search_make IS NULL OR v.make ILIKE '%' || search_make || '%')
-      AND (search_model IS NULL OR v.model ILIKE '%' || search_model || '%')
-      AND (min_price IS NULL OR v.price >= min_price)
-      AND (max_price IS NULL OR v.price <= max_price)
-      AND (min_year IS NULL OR v.year >= min_year)
-      AND (max_year IS NULL OR v.year <= max_year)
-      AND (search_condition IS NULL OR v.condition = search_condition)
-    ORDER BY v.created_at DESC
-    LIMIT page_limit
-    OFFSET page_offset
-  ) v;
+      AND (p_query IS NULL OR (
+        v.make ILIKE '%' || p_query || '%' OR 
+        v.model ILIKE '%' || p_query || '%' OR 
+        v.trim ILIKE '%' || p_query || '%' OR
+        (v.make || ' ' || v.model) ILIKE '%' || p_query || '%'
+      ))
+      AND (p_search_make IS NULL OR v.make ILIKE '%' || p_search_make || '%')
+      AND (p_search_model IS NULL OR v.model ILIKE '%' || p_search_model || '%')
+      AND (p_min_price IS NULL OR v.price >= p_min_price)
+      AND (p_max_price IS NULL OR v.price <= p_max_price)
+      AND (p_min_year IS NULL OR v.year >= p_min_year)
+      AND (p_max_year IS NULL OR v.year <= p_max_year)
+      AND (p_search_condition IS NULL OR v.condition = p_search_condition)
+      AND (p_body_type IS NULL OR v.body_type = p_body_type)
+      AND (p_fuel_type IS NULL OR v.fuel_type = p_fuel_type)
+      AND (p_transmission IS NULL OR v.transmission = p_transmission)
+      AND (p_drivetrain IS NULL OR v.drivetrain = p_drivetrain)
+      AND (p_min_mileage IS NULL OR v.mileage >= p_min_mileage)
+      AND (p_max_mileage IS NULL OR v.mileage <= p_max_mileage)
+      AND (p_is_premium IS NULL OR v.is_premium = p_is_premium)
+    ORDER BY
+      v.is_premium DESC,
+      CASE WHEN p_sort_by = 'price' AND p_sort_order = 'asc' THEN price END ASC,
+      CASE WHEN p_sort_by = 'price' AND p_sort_order = 'desc' THEN price END DESC,
+      CASE WHEN p_sort_by = 'year' AND p_sort_order = 'asc' THEN year END ASC,
+      CASE WHEN p_sort_by = 'year' AND p_sort_order = 'desc' THEN year END DESC,
+      CASE WHEN p_sort_by = 'mileage' AND p_sort_order = 'asc' THEN mileage END ASC,
+      CASE WHEN p_sort_by = 'mileage' AND p_sort_order = 'desc' THEN mileage END DESC,
+      CASE WHEN p_sort_by = 'created_at' AND p_sort_order = 'asc' THEN created_at END ASC,
+      CASE WHEN p_sort_by = 'created_at' AND p_sort_order = 'desc' THEN created_at END DESC,
+      v.created_at DESC
+    LIMIT p_page_limit
+    OFFSET p_page_offset
+  ) v_out
+  LEFT JOIN public.profiles p ON v_out.seller_id = p.id;
 
   RETURN result;
+END;
+$$;
+
+-- Get list of makes that have active listings
+CREATE OR REPLACE FUNCTION public.get_active_makes()
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  result jsonb;
+BEGIN
+  SELECT jsonb_agg(r)
+  INTO result
+  FROM (
+    SELECT 
+      make,
+      count(*) as vehicle_count
+    FROM public.vehicles
+    WHERE status = 'active'
+    GROUP BY make
+    ORDER BY make ASC
+  ) r;
+
+  RETURN COALESCE(result, '[]'::jsonb);
+END;
+$$;
+
+-- Record a view for a vehicle
+CREATE OR REPLACE FUNCTION public.record_vehicle_view(p_vehicle_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  UPDATE public.vehicles
+  SET view_count = view_count + 1
+  WHERE id = p_vehicle_id;
+END;
+$$;
+
+-- Get trending makes based on view counts
+CREATE OR REPLACE FUNCTION public.get_trending_makes(p_limit integer DEFAULT 5)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  result jsonb;
+BEGIN
+  SELECT jsonb_agg(make)
+  INTO result
+  FROM (
+    SELECT 
+      make,
+      sum(view_count) as total_views
+    FROM public.vehicles
+    WHERE status = 'active'
+    GROUP BY make
+    ORDER BY total_views DESC
+    LIMIT p_limit
+  ) r;
+
+  RETURN COALESCE(result, '[]'::jsonb);
+END;
+$$;
+
+-- Get real-time search suggestions
+CREATE OR REPLACE FUNCTION public.get_search_suggestions(p_query text)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_makes jsonb;
+  v_models jsonb;
+  v_listings jsonb;
+BEGIN
+  -- 1. Matching Makes
+  SELECT jsonb_agg(DISTINCT make)
+  INTO v_makes
+  FROM public.vehicles
+  WHERE status = 'active' AND make ILIKE p_query || '%'
+  LIMIT 3;
+
+  -- 2. Matching Models
+  SELECT jsonb_agg(DISTINCT model)
+  INTO v_models
+  FROM public.vehicles
+  WHERE status = 'active' AND model ILIKE p_query || '%'
+  LIMIT 3;
+
+  -- 3. Top Matches (as distinctive strings)
+  SELECT jsonb_agg(DISTINCT (year || ' ' || make || ' ' || model))
+  INTO v_listings
+  FROM public.vehicles
+  WHERE status = 'active' 
+    AND (
+      make ILIKE '%' || p_query || '%' OR 
+      model ILIKE '%' || p_query || '%' OR
+      (make || ' ' || model) ILIKE '%' || p_query || '%'
+    )
+  LIMIT 5;
+
+  RETURN jsonb_build_object(
+    'makes', COALESCE(v_makes, '[]'::jsonb),
+    'models', COALESCE(v_models, '[]'::jsonb),
+    'listings', COALESCE(v_listings, '[]'::jsonb)
+  );
 END;
 $$;

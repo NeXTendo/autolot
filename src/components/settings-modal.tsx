@@ -115,7 +115,7 @@ export function SettingsModal() {
         <DialogHeader>
           <DialogTitle className="text-2xl">Settings</DialogTitle>
           <DialogDescription>
-            Customize your Platinum Auto experience
+            Customize your AutoLot experience
           </DialogDescription>
         </DialogHeader>
 
@@ -255,8 +255,8 @@ export function SettingsModal() {
           <div className="space-y-2">
             <h3 className="text-lg font-semibold">About</h3>
             <div className="text-sm text-muted-foreground space-y-1">
-              <p>Platinum Auto v1.0.0</p>
-              <p>© 2026 Platinum Auto. All rights reserved.</p>
+              <p>AutoLot v1.0.0</p>
+              <p>© 2026 AutoLot. All rights reserved.</p>
             </div>
           </div>
         </div>

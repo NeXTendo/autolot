@@ -1,4 +1,4 @@
--- Migration: RLS Policies for Platinum Auto
+-- Migration: RLS Policies for AutoLot
 -- Description: Comprehensive Row Level Security policies for all tables
 
 -- ============================================================================

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { 
@@ -14,12 +14,17 @@ import {
 } from 'recharts'
 import { Loader2 } from "lucide-react"
 
+interface ChartData {
+  name: string
+  views: number
+}
+
 export function SalesChart() {
-  const [data, setData] = useState<any[]>([])
+  const [data, setData] = useState<ChartData[]>([])
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
-  const fetchChartData = async () => {
+  const fetchChartData = useCallback(async (isMounted = { current: true }) => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
@@ -27,24 +32,28 @@ export function SalesChart() {
       p_seller_id: user.id
     })
 
-    if (!error && chartData) {
-      setData(chartData)
+    if (isMounted.current && !error && chartData) {
+      setData(chartData as ChartData[])
     }
-    setLoading(false)
-  }
+    if (isMounted.current) {
+      setLoading(false)
+    }
+  }, [supabase])
 
   useEffect(() => {
-    fetchChartData()
+    const isMounted = { current: true }
+    fetchChartData(isMounted)
 
     const channel = supabase
       .channel('chart-updates')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'vehicle_impressions' }, fetchChartData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vehicle_impressions' }, () => fetchChartData(isMounted))
       .subscribe()
 
     return () => {
+      isMounted.current = false
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [fetchChartData, supabase])
 
   if (loading) {
     return (

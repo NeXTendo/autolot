@@ -62,11 +62,15 @@ interface FormData {
   pricing_strategy: string
   contact_method: string
   show_phone: boolean
+  is_premium: boolean
 }
 
 export default function ListingWizard() {
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [checkingLimits, setCheckingLimits] = useState(true)
+  const [canCreate, setCanCreate] = useState(true)
+  const [limitInfo, setLimitInfo] = useState({ count: 0, limit: 0 })
   const [images, setImages] = useState<File[]>([])
   const [formData, setFormData] = useState<FormData>({
     // Basic Info
@@ -95,11 +99,76 @@ export default function ListingWizard() {
     pricing_strategy: 'Negotiable',
     contact_method: 'In-built Messenger',
     show_phone: false,
+    is_premium: false,
   })
 
   const router = useRouter()
   const { toast } = useToast()
   const supabase = createClient()
+
+  useEffect(() => {
+    async function checkLimits() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+          router.push('/login')
+          return
+        }
+
+        const { canCreateListing, getUserListingCount, getUserListingLimit } = await import('@/lib/supabase/rpc')
+        
+        const [allowed, count, limit] = await Promise.all([
+          canCreateListing(supabase),
+          getUserListingCount(supabase, user.id),
+          getUserListingLimit(supabase, user.id)
+        ])
+
+        setCanCreate(allowed)
+        setLimitInfo({ count, limit })
+      } catch (error) {
+        console.error('Error checking limits:', error)
+      } finally {
+        setCheckingLimits(false)
+      }
+    }
+
+    checkLimits()
+  }, [supabase, router])
+
+  if (checkingLimits) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="animate-spin text-platinum" size={48} />
+      </div>
+    )
+  }
+
+  if (!canCreate) {
+    return (
+      <div className="container py-12 md:py-24 min-h-screen max-w-4xl flex items-center justify-center">
+        <Card className="w-full max-w-lg border-destructive/20 bg-destructive/5">
+          <CardContent className="p-8 text-center">
+            <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-6">
+              <X className="w-8 h-8 text-destructive" />
+            </div>
+            <h2 className="text-2xl font-bold mb-2">Listing Limit Reached</h2>
+            <p className="text-muted-foreground mb-6">
+              You have reached your limit of {limitInfo.limit} active listings. 
+              Please upgrade your account or archive existing listings to create a new one.
+            </p>
+            <div className="flex flex-col gap-3">
+              <Button asChild variant="platinum" className="w-full">
+                <a href="/dashboard">Manage Listings</a>
+              </Button>
+              <Button asChild variant="outline" className="w-full">
+                <a href="/pricing">Upgrade Account</a>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   const updateField = <K extends keyof FormData>(field: K, value: FormData[K]) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -117,11 +186,11 @@ export default function ListingWizard() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files)
-      if (images.length + newFiles.length > 10) {
+      if (images.length + newFiles.length > 40) {
         toast({
           variant: "destructive",
           title: "Too Many Images",
-          description: "Maximum 10 images allowed.",
+          description: "Maximum 40 images allowed.",
         })
         return
       }
@@ -215,6 +284,7 @@ export default function ListingWizard() {
         contact_method: formData.contact_method,
         pricing_strategy: formData.pricing_strategy,
         show_phone: formData.show_phone,
+        is_premium: formData.is_premium,
       })
 
       toast({
@@ -464,11 +534,11 @@ export default function ListingWizard() {
           <div className="space-y-6">
             <h3 className="text-xl font-bold">Images & Pricing</h3>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Upload Images (Max 10) *</label>
+              <label className="text-sm font-medium">Upload Images (Max 40) *</label>
               <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer">
                 <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
                 <h4 className="font-bold mb-2">Drop Your High-Res Photos</h4>
-                <p className="text-sm text-muted-foreground mb-4">Maximum 10 photos. Showcase the details.</p>
+                <p className="text-sm text-muted-foreground mb-4">Maximum 40 photos. Showcase the details.</p>
                 <input
                   type="file"
                   multiple
@@ -512,7 +582,6 @@ export default function ListingWizard() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Pricing Strategy</label>
                 <Select value={formData.pricing_strategy} onValueChange={(v) => updateField('pricing_strategy', v)}>
                   <SelectTrigger>
                     <SelectValue />
@@ -523,6 +592,27 @@ export default function ListingWizard() {
                     <SelectItem value="Best Offer">Best Offer</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+            </div>
+
+            <div className="pt-8 mt-8 border-t border-white/5">
+              <div className="flex items-center justify-between p-6 rounded-2xl bg-platinum/5 border border-platinum/10">
+                <div className="space-y-1">
+                  <h4 className="font-bold text-platinum">Premium Marketplace Listing</h4>
+                  <p className="text-sm text-muted-foreground max-w-xl">
+                    Apply the premium option to have your vehicle featured on the global homepage and recommended sections.
+                  </p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={formData.is_premium}
+                    onChange={(e) => updateField('is_premium', e.target.checked)}
+                    className="sr-only peer" 
+                    title="Toggle Premium Marketplace Listing"
+                  />
+                  <div className="w-14 h-7 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-platinum after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-platinum/40"></div>
+                </label>
               </div>
             </div>
           </div>

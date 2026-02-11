@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { VehicleCard } from '@/components/vehicle-card'
 import { User, ShieldCheck, Calendar, Car } from 'lucide-react'
-import { Card, CardContent } from '@/components/ui/card'
+import { TrackProfileView } from '@/components/seller/track-profile-view'
 
 export default async function SellerProfilePage({
   params,
@@ -38,6 +38,7 @@ export default async function SellerProfilePage({
 
   return (
     <div className="container py-12 md:py-24 min-h-screen">
+      <TrackProfileView sellerId={id} />
       {/* Profile Header */}
       <div className="mb-12 animate-fade-up">
         <div className="flex flex-col md:flex-row gap-8 items-start md:items-center p-8 rounded-3xl bg-platinum/5 border border-platinum/10 backdrop-blur-sm">

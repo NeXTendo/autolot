@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { VehicleCard } from "@/components/vehicle-card"
-import { searchVehicles } from "@/lib/supabase/rpc"
+import { searchVehicles, type Vehicle } from "@/lib/supabase/rpc"
 import { createClient } from "@/lib/supabase/client"
 
 interface SimilarListingsProps {
@@ -14,7 +14,7 @@ interface SimilarListingsProps {
 }
 
 export function SimilarListings({ vehicle }: SimilarListingsProps) {
-  const [vehicles, setVehicles] = useState<any[]>([])
+  const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const supabase = createClient()
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export function SimilarListings({ vehicle }: SimilarListingsProps) {
         page_limit: 4
       })
       // Filter out current vehicle
-      const filtered = (result.vehicles || []).filter((v: { id: string }) => v.id !== vehicle.id)
+      const filtered = (result.vehicles || []).filter((v: Vehicle) => v.id !== vehicle.id)
       setVehicles(filtered)
     }
     fetchSimilar()

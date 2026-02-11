@@ -11,6 +11,9 @@ import { SellerContact } from '@/components/vehicle/seller-contact'
 import { SimilarListings } from '@/components/vehicle/similar-listings'
 import { RecentlyViewed } from '@/components/personalization/recently-viewed'
 import { VehicleFeatures } from '@/components/vehicle/vehicle-features'
+import { DealerBadge } from '@/components/dealer/dealer-badge'
+import { InspectionBadge } from '@/components/vehicle/inspection-badge'
+import { SaveListingButton } from '@/components/vehicle/save-listing-button'
 
 export default async function VehiclePage({
   params,
@@ -25,7 +28,7 @@ export default async function VehiclePage({
   
   const { data: vehicle } = await supabase
     .from('vehicles')
-    .select('*, profiles(id, name, phone, email)')
+    .select('*, profiles(id, name, phone, email, role)')
     .eq('id', id)
     .single()
 
@@ -34,11 +37,25 @@ export default async function VehiclePage({
   }
 
   const images = vehicle.images || []
+
+  // Check if seller is a verified dealer
+  let dealerProfile = null
+  if (vehicle.profiles?.role === 'dealer') {
+    const { data } = await supabase.rpc('get_dealer_profile', {
+      p_dealer_id: vehicle.seller_id
+    })
+    dealerProfile = data?.profile
+  }
+
+  // Get inspection data if available
+  const { data: inspection } = await supabase.rpc('get_vehicle_inspection', {
+    p_vehicle_id: id
+  })
   const isOwner = user?.id === vehicle.seller_id
 
   return (
     <div className="min-h-screen pb-20">
-      <TrackVehicleView vehicle={vehicle} />
+      <TrackVehicleView vehicle={{ ...vehicle, seller: vehicle.profiles }} />
       
       <div className="container py-12 md:py-24">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
@@ -88,6 +105,16 @@ export default async function VehiclePage({
                   {vehicle.model} {vehicle.trim}
                 </h1>
                 <VehiclePrice price={Number(vehicle.price)} className="text-3xl font-bold mt-4" />
+                
+                {/* Badges */}
+                <div className="flex items-center gap-3 mt-4">
+                  {dealerProfile?.is_verified && (
+                    <DealerBadge isVerified={true} size="md" />
+                  )}
+                  {inspection && (
+                    <InspectionBadge inspection={inspection} />
+                  )}
+                </div>
               </div>
 
               {/* Specifications Grid */}
@@ -150,6 +177,9 @@ export default async function VehiclePage({
               ) : (
                 <>
                   <h4 className="font-bold text-center text-sm uppercase tracking-widest">Concierge Services</h4>
+                  <div className="flex gap-4 mb-4">
+                    <SaveListingButton vehicleId={vehicle.id} className="flex-1 h-12" />
+                  </div>
                   <Button variant="platinum" className="w-full h-12 text-lg">
                     Acquire Vehicle
                   </Button>

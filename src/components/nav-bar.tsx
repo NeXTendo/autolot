@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { CurrencySelector } from "@/components/currency-selector"
 import { SettingsModal } from "@/components/settings-modal"
+import type { UserRole } from "@/lib/types/roles"
 
 import { 
   Menu, 
@@ -13,7 +14,12 @@ import {
   LayoutDashboard, 
   User as UserIcon, 
   LogOut,
-  Plus
+  Plus,
+  Building2,
+  Heart,
+  ShieldCheck,
+  FileCheck,
+  Users
 } from "lucide-react"
 import { 
   Sheet, 
@@ -25,10 +31,11 @@ import {
 
 interface MobileNavProps {
   user: { id: string; email?: string } | null
+  userRole?: UserRole | null
   signOut: () => Promise<void>
 }
 
-export function MobileNav({ user, signOut }: MobileNavProps) {
+export function MobileNav({ user, userRole, signOut }: MobileNavProps) {
   const [open, setOpen] = React.useState(false)
 
   return (
@@ -40,7 +47,7 @@ export function MobileNav({ user, signOut }: MobileNavProps) {
         <SheetContent side="left" className="w-[300px] border-white/5 bg-[#0a0a0a] p-0 flex flex-col">
           <SheetHeader className="p-8 border-b border-white/5 text-left">
             <SheetTitle className="text-2xl font-black tracking-tighter">
-              PLATINUM<span className="font-light text-white/40">AUTO</span>
+              AUTO<span className="font-light text-white/40">LOT</span>
             </SheetTitle>
           </SheetHeader>
 
@@ -62,6 +69,64 @@ export function MobileNav({ user, signOut }: MobileNavProps) {
               <>
                 <div className="h-4" />
                 <div className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20 px-4 mb-2">Management</div>
+                
+                {/* Dealer Links */}
+                {userRole === 'dealer' && (
+                  <>
+                    <MobileNavLink 
+                      href="/dealer/dashboard" 
+                      icon={Building2} 
+                      label="Dealer Dashboard" 
+                      onClick={() => setOpen(false)} 
+                    />
+                    <MobileNavLink 
+                      href="/dealer/staff" 
+                      icon={Users} 
+                      label="Team Management" 
+                      onClick={() => setOpen(false)} 
+                    />
+                  </>
+                )}
+
+                {/* Buyer Links */}
+                {(userRole === 'buyer' || userRole === 'registered' || userRole === 'verified') && (
+                  <>
+                    <MobileNavLink 
+                      href="/buyer/dashboard" 
+                      icon={Heart} 
+                      label="My Garage" 
+                      onClick={() => setOpen(false)} 
+                    />
+                    <MobileNavLink 
+                      href="/buyer/alerts" 
+                      icon={Car} 
+                      label="Search Alerts" 
+                      onClick={() => setOpen(false)} 
+                    />
+                  </>
+                )}
+
+                {/* Admin Links */}
+                {(userRole === 'admin' || userRole === 'moderator') && (
+                  <MobileNavLink 
+                    href="/admin/dealers" 
+                    icon={ShieldCheck} 
+                    label="Admin Panel" 
+                    onClick={() => setOpen(false)} 
+                  />
+                )}
+
+                {/* Inspector Links */}
+                {userRole === 'inspector' && (
+                  <MobileNavLink 
+                    href="/inspector/dashboard" 
+                    icon={FileCheck} 
+                    label="Inspector Dashboard" 
+                    onClick={() => setOpen(false)} 
+                  />
+                )}
+
+                {/* General Links */}
                 <MobileNavLink 
                   href="/dashboard" 
                   icon={LayoutDashboard} 
@@ -143,16 +208,17 @@ function MobileNavLink({ href, icon: Icon, label, onClick }: { href: string; ico
 
 interface NavBarProps {
   user: { id: string; email?: string } | null
+  userRole?: UserRole | null
   signOut: () => Promise<void>
 }
 
-export function NavBar({ user, signOut }: NavBarProps) {
+export function NavBar({ user, userRole, signOut }: NavBarProps) {
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         <Link href="/" className="flex items-center space-x-2">
           <span className="text-2xl font-bold tracking-tighter">
-            PLATINUM<span className="font-light text-muted-foreground">AUTO</span>
+            AUTO<span className="font-light text-muted-foreground">LOT</span>
           </span>
         </Link>
 
@@ -166,6 +232,41 @@ export function NavBar({ user, signOut }: NavBarProps) {
           
           {user ? (
             <div className="flex items-center gap-4">
+              {/* Dealer Links */}
+              {userRole === 'dealer' && (
+                <>
+                  <Link href="/dealer/dashboard" className="text-sm font-medium hover:text-[hsl(var(--platinum))] transition-colors">
+                    Dealer Dashboard
+                  </Link>
+                  <Link href="/dealer/staff" className="text-sm font-medium hover:text-[hsl(var(--platinum))] transition-colors">
+                    Team
+                  </Link>
+                </>
+              )}
+
+              {/* Buyer Links */}
+              {(userRole === 'buyer' || userRole === 'registered' || userRole === 'verified') && (
+                <>
+                  <Link href="/buyer/dashboard" className="text-sm font-medium hover:text-[hsl(var(--platinum))] transition-colors">
+                    My Garage
+                  </Link>
+                </>
+              )}
+
+              {/* Admin Links */}
+              {(userRole === 'admin' || userRole === 'moderator') && (
+                <Link href="/admin/dealers" className="text-sm font-medium hover:text-[hsl(var(--platinum))] transition-colors">
+                  Admin
+                </Link>
+              )}
+
+              {/* Inspector Links */}
+              {userRole === 'inspector' && (
+                <Link href="/inspector/dashboard" className="text-sm font-medium hover:text-[hsl(var(--platinum))] transition-colors">
+                  Inspector
+                </Link>
+              )}
+
               <Link href="/dashboard" className="text-sm font-medium hover:text-[hsl(var(--platinum))] transition-colors">
                 Dashboard
               </Link>
@@ -202,7 +303,7 @@ export function NavBar({ user, signOut }: NavBarProps) {
           )}
         </div>
 
-        <MobileNav user={user} signOut={signOut} />
+        <MobileNav user={user} userRole={userRole} signOut={signOut} />
       </div>
     </nav>
   )

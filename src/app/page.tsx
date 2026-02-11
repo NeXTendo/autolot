@@ -8,13 +8,17 @@ import { VehicleCard } from "@/components/vehicle-card"
 import { RecentlyViewed } from "@/components/personalization/recently-viewed"
 import { RecommendedListings } from "@/components/personalization/recommended-listings"
 import { SectionCarousel } from "@/components/section-carousel"
+import { QuickSearchBubbles } from "@/components/home/quick-search-bubbles"
+import { MakeCarousel } from "@/components/home/make-carousel"
+import { NewsSection } from "@/components/home/news-section"
 
 export default async function Home() {
   const supabase = await createClient()
   
   // Fetch featured vehicles using RPC
   const result = await searchVehicles(supabase, {
-    page_limit: 8, // Fetch more for view all case
+    is_premium: true,
+    page_limit: 8,
     page_offset: 0,
   })
 
@@ -34,26 +38,35 @@ export default async function Home() {
           />
         </div>
         
-        <div className="container relative text-center animate-fade-up">
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight">
-            PLATINUM<span className="font-light text-[hsl(var(--platinum))]">AUTO</span>
-          </h1>
-          <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Discover premium vehicles crafted for excellence
-          </p>
-          <div className="flex gap-4 justify-center flex-wrap">
-            <Link href="/listings">
-              <Button size="lg" variant="platinum" className="group">
-                View Inventory
-                <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </Link>
-            <Link href="/listings/new">
-              <Button size="lg" variant="outline">
-                List Your Vehicle
-              </Button>
-            </Link>
+        <div className="container relative z-10 px-6 text-center space-y-8 animate-fade-up">
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="h-px w-12 bg-platinum/20" />
+            <span className="text-[10px] font-black uppercase tracking-[0.5em] text-platinum/60">The World&apos;s Automotive Hub</span>
+            <div className="h-px w-12 bg-platinum/20" />
           </div>
+
+          <h1 className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tighter uppercase leading-[0.9] md:leading-[0.8] mb-8">
+            Global <br />
+            <span className="text-platinum">Marketplace</span>
+          </h1>
+
+          <p className="text-lg md:text-2xl text-platinum/60 max-w-3xl mx-auto font-medium leading-relaxed px-4">
+            Connect with verified sellers and buyers from across the globe. <br className="hidden md:block" />
+            The most prestigious marketplace for automotive excellence.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
+            <Button asChild size="lg" variant="platinum" className="h-14 sm:h-16 px-8 sm:px-12 rounded-none font-black uppercase tracking-widest text-base sm:text-lg group w-full sm:w-auto">
+              <Link href="/listings" className="flex items-center justify-center">
+                Explore Inventory
+                <ArrowRight className="ml-3 group-hover:translate-x-2 transition-transform duration-500" />
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="h-14 sm:h-16 px-8 sm:px-12 rounded-none border-white/20 hover:bg-white hover:text-black transition-all duration-500 font-black uppercase tracking-widest text-base sm:text-lg w-full sm:w-auto">
+              <Link href="/listings/new">List Your Vehicle</Link>
+            </Button>
+          </div>
+
+          <QuickSearchBubbles />
         </div>
       </section>
 
@@ -67,6 +80,8 @@ export default async function Home() {
         ))}
       </SectionCarousel>
 
+      <MakeCarousel />
+
       {/* Personalized Content */}
       <RecommendedListings />
       
@@ -74,25 +89,7 @@ export default async function Home() {
         <RecentlyViewed title="Resume Your Search" />
       </div>
 
-      {/* Stats Section */}
-      <section className="py-20 border-t border-border/40">
-        <div className="container">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-            <div className="animate-fade-up">
-              <div className="text-4xl font-bold text-[hsl(var(--platinum))] mb-2">500+</div>
-              <div className="text-muted-foreground">Premium Vehicles</div>
-            </div>
-            <div className="animate-fade-up animation-delay-100">
-              <div className="text-4xl font-bold text-[hsl(var(--platinum))] mb-2">10K+</div>
-              <div className="text-muted-foreground">Happy Customers</div>
-            </div>
-            <div className="animate-fade-up animation-delay-200">
-              <div className="text-4xl font-bold text-[hsl(var(--platinum))] mb-2">98%</div>
-              <div className="text-muted-foreground">Satisfaction Rate</div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <NewsSection />
     </div>
   )
 }

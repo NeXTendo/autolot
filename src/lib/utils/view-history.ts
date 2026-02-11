@@ -11,9 +11,13 @@ export interface ViewHistoryItem {
   fuel_type?: string
   image: string
   timestamp: number
+  seller?: {
+    name: string
+    is_verified?: boolean
+  }
 }
 
-const HISTORY_KEY = 'platinum_auto_view_history'
+const HISTORY_KEY = 'autolot_view_history'
 const MAX_HISTORY = 20
 
 export function trackView(vehicle: Omit<ViewHistoryItem, 'timestamp'>) {

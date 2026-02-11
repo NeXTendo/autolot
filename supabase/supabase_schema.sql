@@ -1,4 +1,4 @@
--- Platinum Auto Supabase PostgreSQL Schema
+-- AutoLot Supabase PostgreSQL Schema
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -53,6 +53,7 @@ CREATE TABLE public.vehicles (
     seller_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
     status listing_status DEFAULT 'active',
     is_featured BOOLEAN DEFAULT FALSE,
+    is_premium BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );

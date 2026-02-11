@@ -25,17 +25,9 @@ const POPULAR_MAKES = [
 const BODY_TYPES = ['Sedan', 'SUV', 'Truck', 'Coupe', 'Convertible', 'Wagon', 'Van', 'Hatchback']
 const FUEL_TYPES = ['Gasoline', 'Diesel', 'Electric', 'Hybrid', 'Plug-in Hybrid']
 const TRANSMISSIONS = ['Automatic', 'Manual', 'CVT', 'Semi-Automatic']
-const DRIVETRAINS = ['FWD', 'RWD', 'AWD', '4WD']
 const CONDITIONS = ['Excellent', 'Very Good', 'Good', 'Fair', 'Poor']
-const TITLE_STATUSES = ['Clean', 'Salvage', 'Rebuilt']
-const ACCIDENT_HISTORIES = ['None', 'Minor', 'Moderate', 'Major']
 
-const COMMON_FEATURES = [
-  'Leather Seats', 'Sunroof', 'Navigation System', 'Backup Camera',
-  'Bluetooth', 'Heated Seats', 'Cruise Control', 'Keyless Entry',
-  'Premium Sound System', 'Parking Sensors', 'Lane Departure Warning',
-  'Blind Spot Monitoring', 'Apple CarPlay', 'Android Auto'
-]
+const ACCIDENT_HISTORIES = ['None', 'Minor', 'Moderate', 'Major']
 
 export default function EditListingPage() {
   const { id } = useParams()
@@ -71,6 +63,7 @@ export default function EditListingPage() {
     contact_method: string
     show_phone: boolean
     status: VehicleInput['status']
+    is_premium: boolean
   }>({
     make: '',
     model: '',
@@ -94,6 +87,7 @@ export default function EditListingPage() {
     contact_method: 'In-built Messenger',
     show_phone: false,
     status: 'active',
+    is_premium: false,
   })
 
   const loadVehicle = useCallback(async () => {
@@ -153,6 +147,7 @@ export default function EditListingPage() {
         contact_method: vehicle.contact_method || 'In-built Messenger',
         show_phone: vehicle.show_phone || false,
         status: vehicle.status,
+        is_premium: vehicle.is_premium || false,
       })
       setExistingImages(vehicle.images || [])
       setLoading(false)
@@ -170,23 +165,14 @@ export default function EditListingPage() {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
-  const toggleFeature = (feature: string) => {
-    setFormData(prev => ({
-      ...prev,
-      features: prev.features.includes(feature)
-        ? prev.features.filter(f => f !== feature)
-        : [...prev.features, feature]
-    }))
-  }
-
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const added = Array.from(e.target.files)
-      if (existingImages.length + newImages.length + added.length > 10) {
+      if (existingImages.length + newImages.length + added.length > 40) {
         toast({
           variant: "destructive",
           title: "Too Many Images",
-          description: "Maximum 10 images allowed.",
+          description: "Maximum 40 images allowed.",
         })
         return
       }
@@ -235,6 +221,7 @@ export default function EditListingPage() {
         price: parseFloat(formData.price),
         mileage: parseInt(formData.mileage),
         images: finalImages,
+        is_premium: formData.is_premium,
       })
 
       toast({
@@ -430,7 +417,7 @@ export default function EditListingPage() {
             <h3 className="text-xl font-bold">Images & Description</h3>
             <div className="space-y-6">
               <div>
-                <label className="text-sm font-medium uppercase tracking-wider text-muted-foreground block mb-4">Photos (Max 10)</label>
+                <label className="text-sm font-medium uppercase tracking-wider text-muted-foreground block mb-4">Photos (Max 40)</label>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   {/* Existing Images */}
                   {existingImages.map((url, i) => (
@@ -459,7 +446,7 @@ export default function EditListingPage() {
                     </div>
                   ))}
                   {/* Upload Button */}
-                  {(existingImages.length + newImages.length < 10) && (
+                  {(existingImages.length + newImages.length < 40) && (
                     <label className="aspect-square rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer hover:border-platinum/50 transition-colors">
                       <Upload className="w-6 h-6 text-muted-foreground mb-1" />
                       <span className="text-[10px] uppercase font-bold text-muted-foreground">Add</span>
@@ -496,6 +483,25 @@ export default function EditListingPage() {
                   value={formData.price}
                   onChange={(e) => updateField('price', e.target.value)}
                 />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Premium Status</label>
+                <div className="p-4 rounded-xl bg-platinum/5 border border-platinum/20 flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <span className="font-bold uppercase tracking-widest text-xs">Featured Listing</span>
+                    <p className="text-[10px] text-muted-foreground">Premium listings appear on the homepage</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={formData.is_premium}
+                      onChange={(e) => updateField('is_premium', e.target.checked)}
+                      className="sr-only peer" 
+                      title="Toggle Premium Status"
+                    />
+                    <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-platinum after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-platinum/40"></div>
+                  </label>
+                </div>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Current Status</label>

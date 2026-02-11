@@ -9,28 +9,38 @@ interface SectionCarouselProps {
   title: string
   description?: string
   children: React.ReactNode
-  viewAllHref?: string
 }
 
-export function SectionCarousel({ title, description, children, viewAllHref }: SectionCarouselProps) {
+export function SectionCarousel({ title, description, children }: SectionCarouselProps) {
   const [isExpanded, setIsExpanded] = React.useState(false)
 
   return (
-    <section className="py-20 overflow-hidden">
-      <div className="container">
-        <div className="flex items-center justify-between mb-12">
+    <section className="py-16 md:py-24 overflow-hidden">
+      <div className="container px-6">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 sm:gap-8 mb-12 sm:mb-16 animate-fade-up">
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-2 tracking-tight uppercase">{title}</h2>
-            {description && <p className="text-muted-foreground text-sm uppercase tracking-widest">{description}</p>}
+            <div className="flex items-center gap-4 mb-4">
+              <div className="h-px w-12 bg-platinum/20" />
+              <span className="text-[10px] font-black uppercase tracking-[0.5em] text-platinum/40">Marketplace Insight</span>
+            </div>
+            <h2 className="text-3xl md:text-5xl font-black mb-6 tracking-tighter uppercase">
+              {title}
+            </h2>
+            {description && (
+              <p className="text-platinum/40 max-w-xl font-medium leading-relaxed">
+                {description}
+              </p>
+            )}
           </div>
-          <div className="flex gap-4">
+          
+          <div className="flex items-center">
             <Button 
-              variant="ghost" 
+              variant="outline" 
               size="sm"
-              className="text-[10px] uppercase tracking-[0.2em] font-black h-9 px-4 hover:bg-white/5"
+              className="h-10 px-6 rounded-none border-white/10 hover:border-white/20 text-platinum/60 hover:text-white font-black uppercase tracking-[0.2em] text-[10px] transition-all duration-300"
               onClick={() => setIsExpanded(!isExpanded)}
             >
-              {isExpanded ? "Collapse" : "View All"}
+              {isExpanded ? "Collapse View" : "Expand Collection"}
             </Button>
           </div>
         </div>

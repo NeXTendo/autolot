@@ -10,7 +10,7 @@ interface RecentlyViewedProps {
   title?: string
 }
 
-export function RecentlyViewed({ excludeId, title = "Recently Viewed" }: RecentlyViewedProps) {
+export function RecentlyViewed({ excludeId, title = "Recent Discoveries" }: RecentlyViewedProps) {
   const [history] = useState<ViewHistoryItem[]>(() => getHistory())
 
   const filteredHistory = history.filter(item => item.id !== excludeId)
@@ -18,26 +18,29 @@ export function RecentlyViewed({ excludeId, title = "Recently Viewed" }: Recentl
   if (filteredHistory.length === 0) return null
 
   return (
-    <SectionCarousel 
-      title={title} 
-      description="Based on your browsing activity"
-    >
-      {filteredHistory.slice(0, 10).map((item) => (
-        <VehicleCard 
-          key={item.id} 
-          vehicle={{
-            id: item.id,
-            make: item.make,
-            model: item.model,
-            year: item.year,
-            price: item.price,
-            mileage: item.mileage,
-            transmission: item.transmission,
-            fuel_type: item.fuel_type,
-            images: [item.image]
-          }} 
-        />
-      ))}
-    </SectionCarousel>
+    <div className="py-24 bg-black/50">
+      <SectionCarousel 
+        title={title} 
+        description="Pick up where you left off"
+      >
+        {filteredHistory.slice(0, 10).map((item) => (
+          <VehicleCard 
+            key={item.id} 
+            vehicle={{
+              id: item.id,
+              make: item.make,
+              model: item.model,
+              year: item.year,
+              price: item.price,
+              mileage: item.mileage,
+              transmission: item.transmission,
+              fuel_type: item.fuel_type,
+              images: [item.image],
+              seller: item.seller
+            }} 
+          />
+        ))}
+      </SectionCarousel>
+    </div>
   )
 }

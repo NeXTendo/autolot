@@ -19,8 +19,18 @@ interface SellerReviewsDialogProps {
   trigger?: React.ReactNode
 }
 
+interface Review {
+  id: string
+  rating: number
+  comment: string
+  created_at: string
+  reviewer: {
+    name: string
+  } | null
+}
+
 export function SellerReviewsDialog({ sellerId, sellerName, trigger }: SellerReviewsDialogProps) {
-  const [reviews, setReviews] = useState<any[]>([])
+  const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
@@ -33,7 +43,7 @@ export function SellerReviewsDialog({ sellerId, sellerName, trigger }: SellerRev
       .order('created_at', { ascending: false })
 
     if (!error && data) {
-      setReviews(data)
+      setReviews(data as unknown as Review[])
     }
     setLoading(false)
   }

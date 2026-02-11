@@ -1,17 +1,27 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { MessageCircle, Star, ChevronDown, ChevronUp, Loader2 } from "lucide-react"
 
+interface Review {
+  id: string
+  rating: number
+  comment: string
+  created_at: string
+  reviewer: {
+    name: string
+  } | null
+}
+
 export function ReviewManagement() {
   const [isOpen, setIsOpen] = useState(true)
-  const [reviews, setReviews] = useState<any[]>([])
+  const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
-  const fetchReviews = async () => {
+  const fetchReviews = useCallback(async (isMounted = { current: true }) => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
@@ -21,24 +31,28 @@ export function ReviewManagement() {
       .eq('seller_id', user.id)
       .order('created_at', { ascending: false })
 
-    if (!error && data) {
-      setReviews(data)
+    if (isMounted.current && !error && data) {
+      setReviews(data as any as Review[])
     }
-    setLoading(false)
-  }
+    if (isMounted.current) {
+      setLoading(false)
+    }
+  }, [supabase])
 
   useEffect(() => {
-    fetchReviews()
+    const isMounted = { current: true }
+    fetchReviews(isMounted)
 
     const channel = supabase
       .channel('review-updates')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'reviews' }, fetchReviews)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'reviews' }, () => fetchReviews(isMounted))
       .subscribe()
 
     return () => {
+      isMounted.current = false
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [fetchReviews, supabase])
 
   const avgRating = reviews.length > 0 
     ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)

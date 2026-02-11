@@ -24,11 +24,11 @@ interface SellerContactProps {
 
 export function SellerContact({ seller, vehicle, isOwner }: SellerContactProps) {
   const whatsappNumber = seller.phone?.replace(/\D/g, '')
-  const whatsappMsg = encodeURIComponent(`Hi ${seller.name}, I'm interested in the ${vehicle.make} ${vehicle.model} (ID: ${vehicle.id}) on Platinum Auto.`)
+  const whatsappMsg = encodeURIComponent(`Hi ${seller.name}, I'm interested in the ${vehicle.make} ${vehicle.model} (ID: ${vehicle.id}) on AutoLot.`)
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${whatsappMsg}`
   
   const emailSubject = encodeURIComponent(`Inquiry: ${vehicle.make} ${vehicle.model}`)
-  const emailBody = encodeURIComponent(`Hi ${seller.name},\n\nI saw your ${vehicle.make} ${vehicle.model} on Platinum Auto and I'm interested in learning more.\n\nVehicle Link: ${typeof window !== 'undefined' ? window.location.href : ''}`)
+  const emailBody = encodeURIComponent(`Hi ${seller.name},\n\nI saw your ${vehicle.make} ${vehicle.model} on AutoLot and I'm interested in learning more.\n\nVehicle Link: ${typeof window !== 'undefined' ? window.location.href : ''}`)
   const emailUrl = `mailto:${seller.email}?subject=${emailSubject}&body=${emailBody}`
 
   return (

@@ -7,14 +7,17 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import { useToast } from '@/hooks/use-toast'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Store } from 'lucide-react'
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [isDealer, setIsDealer] = useState(false)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
@@ -76,6 +79,7 @@ export default function RegisterPage() {
         options: {
           data: {
             full_name: fullName,
+            role: isDealer ? 'dealer' : 'registered', // Set role based on toggle
           },
         },
       })
@@ -108,11 +112,19 @@ export default function RegisterPage() {
       if (data.user) {
         toast({
           variant: "success",
-          title: "Account Created!",
-          description: "Welcome to Platinum Auto. Redirecting to dashboard...",
+          title: isDealer ? "Dealer Account Created!" : "Account Created!",
+          description: isDealer 
+            ? "Welcome partner. Redirecting to dealer setup..." 
+            : "Welcome to AutoLot. Redirecting to dashboard...",
         })
+        
+        // Redirect based on role
         setTimeout(() => {
-          router.push('/dashboard')
+          if (isDealer) {
+            router.push('/dealer/dashboard') // Or prompt to create profile
+          } else {
+            router.push('/dashboard')
+          }
           router.refresh()
         }, 1500)
       }
@@ -131,14 +143,12 @@ export default function RegisterPage() {
       <Card className="w-full max-w-md animate-fade-up">
         <CardHeader>
           <CardTitle className="text-3xl">Create Account</CardTitle>
-          <CardDescription>Join the exclusive Platinum Auto circle.</CardDescription>
+          <CardDescription>Join the exclusive AutoLot circle.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <label htmlFor="fullName" className="text-sm font-medium">
-                Full Name
-              </label>
+              <Label htmlFor="fullName">Full Name</Label>
               <Input
                 id="fullName"
                 type="text"
@@ -150,9 +160,7 @@ export default function RegisterPage() {
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                Email Address
-              </label>
+              <Label htmlFor="email">Email Address</Label>
               <Input
                 id="email"
                 type="email"
@@ -164,9 +172,7 @@ export default function RegisterPage() {
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">
-                Password
-              </label>
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -181,9 +187,7 @@ export default function RegisterPage() {
               </p>
             </div>
             <div className="space-y-2">
-              <label htmlFor="confirmPassword" className="text-sm font-medium">
-                Confirm Password
-              </label>
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
               <Input
                 id="confirmPassword"
                 type="password"
@@ -194,6 +198,26 @@ export default function RegisterPage() {
                 required
               />
             </div>
+
+            {/* Dealer Toggle */}
+            <div className="flex items-center space-x-4 rounded-lg border p-4 bg-muted/40">
+              <Store className="h-6 w-6 text-primary" />
+              <div className="flex-1 space-y-1">
+                <Label htmlFor="dealer-mode" className="text-sm font-medium leading-none">
+                  Register as Business
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  I am a dealer or automotive business
+                </p>
+              </div>
+              <Switch
+                id="dealer-mode"
+                checked={isDealer}
+                onCheckedChange={setIsDealer}
+                disabled={loading}
+              />
+            </div>
+
             <Button
               type="submit"
               variant="platinum"
@@ -206,7 +230,7 @@ export default function RegisterPage() {
                   Creating Account...
                 </>
               ) : (
-                'Register for Access'
+                isDealer ? 'Register as Dealer' : 'Register for Access'
               )}
             </Button>
           </form>

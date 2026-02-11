@@ -32,22 +32,24 @@ function AnalyticsStat({ label, value, trend, icon: Icon, isCurrency }: Analytic
     : value
 
   return (
-    <Card className="border-primary/20 bg-card/60 backdrop-blur-xl shadow-lg hover:border-platinum/30 transition-all duration-300">
+    <Card className="border-white/5 bg-card/40 backdrop-blur-xl hover:border-platinum/20 transition-all duration-500 rounded-none overflow-hidden">
       <CardContent className="p-6">
-        <div className="flex justify-between items-start mb-4">
-          <div className="p-2.5 rounded-xl bg-platinum/10 border border-white/10 text-platinum shadow-inner">
-            <Icon size={20} />
+        <div className="flex justify-between items-start mb-6">
+          <div className="p-2.5 bg-platinum/5 border border-white/5 text-platinum/40 group-hover:text-platinum transition-colors">
+            <Icon size={18} />
           </div>
-          <div className={`flex items-center gap-1.5 text-[11px] font-black px-2 py-1 rounded-full ${
-            isPositive ? 'bg-green-400/10 text-green-400' : 'bg-red-400/10 text-red-400'
+          <div className={`flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-none border ${
+            isPositive 
+              ? 'bg-green-500/10 text-green-400 border-green-500/20' 
+              : 'bg-red-500/10 text-red-400 border-red-500/20'
           }`}>
-            {isPositive ? <TrendingUp size={12} strokeWidth={3} /> : <TrendingDown size={12} strokeWidth={3} />}
+            {isPositive ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
             {Math.abs(trend)}%
           </div>
         </div>
         <div>
-          <h4 className="text-[11px] uppercase tracking-[0.2em] text-platinum/50 font-black mb-1.5">{label}</h4>
-          <div className="text-3xl font-bold text-white tracking-tight">{displayValue || "0"}</div>
+          <h4 className="text-[10px] uppercase tracking-[0.3em] text-platinum/30 font-black mb-1">{label}</h4>
+          <div className="text-3xl font-bold text-white tracking-tighter">{displayValue || "0"}</div>
         </div>
       </CardContent>
     </Card>

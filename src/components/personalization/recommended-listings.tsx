@@ -5,7 +5,6 @@ import { VehicleCard } from "@/components/vehicle-card"
 import { searchVehicles, type Vehicle } from "@/lib/supabase/rpc"
 import { createClient } from "@/lib/supabase/client"
 import { getPersonalizationStats } from "@/lib/utils/view-history"
-import { Sparkles } from "lucide-react"
 
 export function RecommendedListings() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
@@ -48,15 +47,20 @@ export function RecommendedListings() {
   if (!loading && vehicles.length === 0) return null
 
   return (
-    <section className="py-20 bg-platinum/5">
+    <section className="py-24 bg-black">
       <div className="container">
-        <div className="flex items-center gap-3 mb-10">
-          <div className="p-2 rounded-lg bg-platinum/10">
-            <Sparkles className="w-6 h-6 text-platinum" />
-          </div>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 animate-fade-up">
           <div>
-            <h2 className="text-3xl font-bold">Recommended For You</h2>
-            <p className="text-muted-foreground text-sm">Curated selection based on your browsing patterns</p>
+            <div className="flex items-center gap-4 mb-4">
+              <div className="h-px w-12 bg-platinum/20" />
+              <span className="text-[10px] font-black uppercase tracking-[0.5em] text-platinum/40">Personalized</span>
+            </div>
+            <h2 className="text-3xl md:text-5xl font-black mb-6 tracking-tighter uppercase">
+              Curated <span className="text-platinum">Selection</span>
+            </h2>
+            <p className="text-platinum/40 max-w-xl font-medium leading-relaxed">
+              Based on your browsing patterns and preferences. Hand-picked for your collection.
+            </p>
           </div>
         </div>
         
